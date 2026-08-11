@@ -17,6 +17,7 @@ dependencies:
   # Book Download
   # Navigation
   go_router: 
+  shared_preferences:
 
   # Typography
   google_fonts: 
@@ -24,10 +25,7 @@ dependencies:
   # Networking (wired up in core/network when backend is connected)
   dio: 
 
-  # Local persistence (schema defined in core/storage when enabled)
-  hive: 
-  hive_flutter: 
-
+  
   # Images
   cached_network_image: 
   palette_generator:

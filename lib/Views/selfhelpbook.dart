@@ -1,137 +1,594 @@
-      // import 'package:bookverse/Views/BookDetails.dart';
-      // import 'package:bookverse/Widgets/Booklistwidget.dart';
-      // import 'package:flutter/material.dart';
 
-      // class SelfHelpBooksScreen extends StatelessWidget {
-      //   const SelfHelpBooksScreen({super.key});
+// lib/Screens/SelfHelpBooksScreen.dart
 
-      //   static const List<GenreBookData> _books = [
-      //     GenreBookData(
-      //       title: 'Atomic Habits',
-      //       author: 'James Clear',
-      //       imageUrl: 'https://m.media-amazon.com/images/I/91bYsX41DVL._SL1500_.jpg',
-      //       rating: 4.8,
-      //       ratingCount: '24,102',
-      //     ),
-      //     GenreBookData(
-      //       title: 'The Psychology of Money',
-      //       author: 'Morgan Housel',
-      //       imageUrl: 'https://covers.openlibrary.org/b/isbn/9780857197689-L.jpg',
-      //       rating: 4.7,
-      //       ratingCount: '13,540',
-      //     ),
-      //     GenreBookData(
-      //       title: 'Rich Dad Poor Dad',
-      //       author: 'Robert T. Kiyosaki',
-      //       imageUrl: 'https://m.media-amazon.com/images/I/81bsw6fnUiL._SL1500_.jpg',
-      //       rating: 4.5,
-      //       ratingCount: '19,870',
-      //     ),
-      //     GenreBookData(
-      //       title: 'The 5 AM Club',
-      //       author: 'Robin Sharma',
-      //       imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSJpo2D8xGqD5N4l0r0ZwMl5Tdgvbx0SdCDLSPMd0DZ8g&s=10',
-      //       rating: 4.4,
-      //       ratingCount: '7,320',
-      //     ),
-      //     GenreBookData(
-      //       title: 'Can\'t Hurt Me',
-      //       author: 'David Goggins',
-      //       imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGEAbkQ3OS2z4qYyyvKHFkyLYAOLUjfN8pgMPvcKXD2Q&s=10',
-      //       rating: 4.9,
-      //       ratingCount: '15,690',
-      //     ),
-      //     GenreBookData(
-      //       title: 'The Power of Now',
-      //       author: 'Eckhart Tolle',
-      //       imageUrl: 'https://m.media-amazon.com/images/I/61ipn3zChbL._AC_UF1000,1000_QL80_.jpg',
-      //       rating: 4.6,
-      //       ratingCount: '11,205',
-      //     ),
-      //   ];
+// ignore_for_file: prefer_const_constructors
 
-      //   @override
-      //   Widget build(BuildContext context) {
-      //     return Scaffold(
-      //       // Background is a gradient — green at the top, fading down to white.
-      //       body: Container(
-      //         width: double.infinity,
-      //         height: double.infinity,
-      //         decoration: const BoxDecoration(
-      //           gradient: LinearGradient(
-      //             begin: Alignment.topCenter,
-      //             end: Alignment.bottomCenter,
-      //             colors: [
-      //               Color(0xFF10B981), // green, top
-      //               Color(0xFFD1FAE5), // fading lighter
-      //               Colors.white, // white, bottom
-      //             ],
-      //             stops: [0.0, 0.28, 0.55],
-      //           ),
-      //         ),
-      //         child: SafeArea(
-      //           child: Column(
-      //             children: [
-      //               // Header
-      //               Padding(
-      //                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      //                 child: Row(
-      //                   children: [
-      //                     IconButton(
-      //                       onPressed: () => Navigator.maybePop(context),
-      //                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-      //                     ),
-      //                     const Text(
-      //                       'Self-Help',
-      //                       style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: Colors.white),
-      //                     ),
-      //                   ],
-      //                 ),
-      //               ),
+import 'dart:async';
 
-      //               // Search bar
-      //               Padding(
-      //                 padding: const EdgeInsets.symmetric(horizontal: 18),
-      //                 child: Container(
-      //                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      //                   decoration: BoxDecoration(
-      //                     color: Colors.white.withOpacity(0.9),
-      //                     borderRadius: BorderRadius.circular(14),
-      //                     border: Border.all(color: const Color(0xFFECECF2)),
-      //                   ),
-      //                   child: const Row(
-      //                     children: [
-      //                       Icon(Icons.search_rounded, color: Colors.grey, size: 20),
-      //                       SizedBox(width: 8),
-      //                       Text('Search self-help books...', style: TextStyle(color: Colors.grey, fontSize: 13.5)),
-      //                     ],
-      //                   ),
-      //                 ),
-      //               ),
+import 'package:bookverse/Models/BookModel.dart';
+import 'package:bookverse/ViewModels/Book-view-model.dart';
+import 'package:bookverse/Widgets/bookwidget.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-      //               const SizedBox(height: 18),
+import 'BookDetails.dart';
 
-      //               // Book list — the SAME GenreBookListItem widget used in
-      //               // the Fantasy/Romance screens, called again for each book
-      //               // with different arguments.
-      //               Expanded(
-      //                 child: ListView.builder(
-      //                   padding: const EdgeInsets.symmetric(horizontal: 18),
-      //                   itemCount: _books.length,
-      //                   itemBuilder: (context, index) {
-      //                     return GenreBookListItem(
-      //                       book: _books[index],
-      //                       onTap: () {
-      //                         Navigator.push(context, MaterialPageRoute(builder: (context) => const BookDetailsScreen()));
-      //                       },
-      //                     );
-      //                   },
-      //                 ),
-      //               ),
-      //             ],
-      //           ),
-      //         ),
-      //       ),
-      //     );
-      //   }
-      // }
+class SelfHelpBooksScreen extends StatefulWidget {
+  const SelfHelpBooksScreen({super.key});
+
+  @override
+  State<SelfHelpBooksScreen> createState() =>
+      _SelfHelpBooksScreenState();
+}
+
+class _SelfHelpBooksScreenState
+    extends State<SelfHelpBooksScreen> {
+  static const int maxBooks = 200;
+
+  final TextEditingController _searchController =
+      TextEditingController();
+
+  Timer? _searchDebounce;
+
+  String _searchQuery = '';
+
+  // ============================================================
+  // INIT
+  // ============================================================
+
+  @override
+  void initState() {
+    super.initState();
+
+    _searchController.addListener(
+      _onSearchChanged,
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final viewModel =
+          context.read<BookViewModel>();
+
+      if (viewModel.selfHelpBooks.isEmpty) {
+        viewModel.loadSelfHelpBooks();
+      }
+    });
+  }
+
+  // ============================================================
+  // SEARCH
+  // ============================================================
+
+  void _onSearchChanged() {
+    final query =
+        _searchController.text.trim();
+
+    if (mounted) {
+      setState(() {
+        _searchQuery = query;
+      });
+    }
+
+    _searchDebounce?.cancel();
+
+    // Empty search
+    if (query.isEmpty) {
+      final viewModel =
+          context.read<BookViewModel>();
+
+      viewModel.clearSelfHelpSearch();
+
+      if (viewModel.selfHelpBooks.isEmpty) {
+        viewModel.loadSelfHelpBooks();
+      }
+
+      return;
+    }
+
+    // Search debounce
+    _searchDebounce = Timer(
+      const Duration(milliseconds: 500),
+      () {
+        if (!mounted) return;
+
+        context
+            .read<BookViewModel>()
+            .searchSelfHelpBooks(query);
+      },
+    );
+  }
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
+
+  @override
+  void dispose() {
+    _searchDebounce?.cancel();
+
+    _searchController.removeListener(
+      _onSearchChanged,
+    );
+
+    _searchController.dispose();
+
+    super.dispose();
+  }
+
+  // ============================================================
+  // OPEN BOOK DETAILS
+  // ============================================================
+
+  void _openBookDetails(BookModel book) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookDetailsScreen(
+          book: book,
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // REFRESH
+  // ============================================================
+
+  Future<void> _refreshBooks() async {
+    await context
+        .read<BookViewModel>()
+        .loadSelfHelpBooks();
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor:
+            const Color.fromARGB(255, 65, 113, 216),
+        elevation: 0,
+        centerTitle: false,
+
+        leading: IconButton(
+          onPressed: () {
+            Navigator.maybePop(context);
+          },
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            color: Colors.white,
+          ),
+        ),
+
+        title: const Text(
+          'Self Help Books',
+          style: TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+      ),
+
+      backgroundColor: Colors.white,
+
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        color: Colors.white,
+
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+
+              // ==================================================
+              // SEARCH BAR
+              // ==================================================
+
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 18,
+                ),
+
+                child: Container(
+                  decoration: BoxDecoration(
+                    color:
+                        Colors.white.withOpacity(0.94),
+
+                    borderRadius:
+                        BorderRadius.circular(14),
+
+                    border: Border.all(
+                      color:
+                          const Color(0xFFECECF2),
+                    ),
+
+                    boxShadow: [
+                      BoxShadow(
+                        color:
+                            Colors.black.withOpacity(
+                          0.06,
+                        ),
+                        blurRadius: 10,
+                        offset:
+                            const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+
+                  child: TextField(
+                    controller:
+                        _searchController,
+
+                    textInputAction:
+                        TextInputAction.search,
+
+                    textCapitalization:
+                        TextCapitalization.sentences,
+
+                    decoration:
+                        InputDecoration(
+                      hintText:
+                          'Search self help books...',
+
+                      hintStyle: TextStyle(
+                        color:
+                            Colors.grey.shade500,
+                        fontSize: 13.5,
+                      ),
+
+                      prefixIcon:
+                          const Icon(
+                        Icons.search_rounded,
+                        color: Colors.grey,
+                        size: 21,
+                      ),
+
+                      suffixIcon:
+                          _searchQuery.isNotEmpty
+                              ? IconButton(
+                                  onPressed: () {
+                                    _searchController
+                                        .clear();
+                                  },
+                                  icon:
+                                      const Icon(
+                                    Icons
+                                        .close_rounded,
+                                    color:
+                                        Colors.grey,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons
+                                      .auto_awesome_rounded,
+                                  color:
+                                      Colors.grey,
+                                  size: 20,
+                                ),
+
+                      border:
+                          InputBorder.none,
+
+                      contentPadding:
+                          const EdgeInsets.symmetric(
+                        vertical: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              // ==================================================
+              // BOOK LIST
+              // ==================================================
+
+              Expanded(
+                child:
+                    Consumer<BookViewModel>(
+                  builder: (
+                    context,
+                    viewModel,
+                    child,
+                  ) {
+                    // ==================================================
+                    // SEARCH LOADING
+                    // ==================================================
+
+                    if (_searchQuery.isNotEmpty &&
+                        viewModel.isSearching) {
+                      return _buildLoading();
+                    }
+
+                    // ==================================================
+                    // INITIAL LOADING
+                    // ==================================================
+
+                    if (_searchQuery.isEmpty &&
+                        viewModel.isLoading &&
+                        viewModel.selfHelpBooks
+                            .isEmpty) {
+                      return _buildLoading();
+                    }
+
+                    // ==================================================
+                    // GET BOOKS
+                    // ==================================================
+
+                    final books =
+                        _getBooks(viewModel);
+
+                    // ==================================================
+                    // ERROR
+                    // ==================================================
+
+                    if (viewModel.errorMessage !=
+                            null &&
+                        books.isEmpty) {
+                      return _buildError(
+                        viewModel,
+                      );
+                    }
+
+                    // ==================================================
+                    // EMPTY
+                    // ==================================================
+
+                    if (books.isEmpty) {
+                      return _buildEmpty();
+                    }
+
+                    // ==================================================
+                    // BOOK LIST
+                    // ==================================================
+
+                    return RefreshIndicator(
+                      color: Colors.grey,
+
+                      onRefresh:
+                          _refreshBooks,
+
+                      child: ListView.builder(
+                        physics:
+                            const AlwaysScrollableScrollPhysics(
+                          parent:
+                              BouncingScrollPhysics(),
+                        ),
+
+                        padding:
+                            const EdgeInsets.fromLTRB(
+                          18,
+                          2,
+                          18,
+                          25,
+                        ),
+
+                        itemCount:
+                            books.length,
+
+                        itemBuilder:
+                            (
+                          context,
+                          index,
+                        ) {
+                          final BookModel book =
+                              books[index];
+
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(
+                              bottom: 12,
+                            ),
+
+                            // ==================================================
+                            // CUSTOM BOOK WIDGET
+                            // ==================================================
+
+                            child: BookCardWidget(
+                              book: book,
+
+                              onTap: () {
+                                _openBookDetails(
+                                  book,
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // GET BOOKS
+  // ============================================================
+
+  List<BookModel> _getBooks(
+    BookViewModel viewModel,
+  ) {
+    if (_searchQuery.isEmpty) {
+      return viewModel.selfHelpBooks
+          .take(maxBooks)
+          .toList();
+    }
+
+    return viewModel.selfHelpSearchResults
+        .take(maxBooks)
+        .toList();
+  }
+
+  // ============================================================
+  // LOADING
+  // ============================================================
+
+  Widget _buildLoading() {
+    return const Center(
+      child: CircularProgressIndicator(
+        color: Colors.grey,
+      ),
+    );
+  }
+
+  // ============================================================
+  // ERROR
+  // ============================================================
+
+  Widget _buildError(
+    BookViewModel viewModel,
+  ) {
+    return Center(
+      child: Padding(
+        padding:
+            const EdgeInsets.all(30),
+
+        child: Column(
+          mainAxisSize:
+              MainAxisSize.min,
+
+          children: [
+            const Icon(
+              Icons.cloud_off_rounded,
+              size: 44,
+              color: Colors.grey,
+            ),
+
+            const SizedBox(height: 12),
+
+            Text(
+              _searchQuery.isNotEmpty
+                  ? 'Unable to search self help books'
+                  : 'Unable to load self help books',
+
+              textAlign:
+                  TextAlign.center,
+
+              style:
+                  const TextStyle(
+                fontSize: 15,
+                fontWeight:
+                    FontWeight.w600,
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            Text(
+              viewModel.errorMessage ??
+                  'Please check your internet connection and try again.',
+
+              textAlign:
+                  TextAlign.center,
+
+              style:
+                  const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            ElevatedButton(
+              onPressed: () {
+                if (_searchQuery.isNotEmpty) {
+                  viewModel.searchSelfHelpBooks(
+                    _searchQuery,
+                  );
+                } else {
+                  viewModel.loadSelfHelpBooks();
+                }
+              },
+
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.grey,
+                foregroundColor:
+                    Colors.white,
+                elevation: 0,
+
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(12),
+                ),
+              ),
+
+              child: const Text(
+                'Try Again',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ============================================================
+  // EMPTY
+  // ============================================================
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisSize:
+            MainAxisSize.min,
+
+        children: [
+          const Icon(
+            Icons.auto_awesome_outlined,
+            size: 45,
+            color: Colors.grey,
+          ),
+
+          const SizedBox(height: 12),
+
+          Text(
+            _searchQuery.isEmpty
+                ? 'No self help books available'
+                : 'No self help books found',
+
+            textAlign:
+                TextAlign.center,
+
+            style:
+                const TextStyle(
+              fontSize: 15,
+              fontWeight:
+                  FontWeight.w600,
+            ),
+          ),
+
+          if (_searchQuery.isNotEmpty) ...[
+            const SizedBox(height: 5),
+
+            const Text(
+              'Try another search.',
+              style:
+                  TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}

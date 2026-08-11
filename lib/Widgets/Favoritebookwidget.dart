@@ -1,194 +1,229 @@
-// lib/Widgets/FavouriteBookCard.dart
+import 'package:bookverse/Views/ReaderScreen.dart';
 import 'package:flutter/material.dart';
 
-class FavouriteBook {
-  final String title;
-  final String author;
-  final double progress; // 0..1
-  final String category;
-  final Color coverColor;
-  final Color textColor;
-  final bool isFavorite;
-  final String? imageUrl; // real cover photo - falls back to painted cover if null/fails
 
-  const FavouriteBook({
-    required this.title,
-    required this.author,
-    required this.progress,
-    required this.category,
-    required this.coverColor,
-    this.textColor = Colors.black87,
-    this.isFavorite = true,
-    this.imageUrl,
-  });
-}
+// ================================================================
+// FONT SIZE CONTROL
+// ================================================================
 
-class FavouriteBookCard extends StatelessWidget {
-  final FavouriteBook book;
-  final VoidCallback? onTap;
-  final VoidCallback? onFavoriteTap;
-  final VoidCallback? onMoreTap;
+class ReaderFontControl extends StatelessWidget {
+  final double fontSize;
+  final double minFontSize;
+  final double maxFontSize;
+  final ValueChanged<double> onChanged;
 
-  const FavouriteBookCard({
+  const ReaderFontControl({
     super.key,
-    required this.book,
-    this.onTap,
-    this.onFavoriteTap,
-    this.onMoreTap,
+    required this.fontSize,
+    required this.minFontSize,
+    required this.maxFontSize,
+    required this.onChanged,
   });
 
-  static const purple = Color(0xFF6C4CE0);
+  @override
+  Widget build(BuildContext context) {
+    const mutedColor = Color(0xFF8A8375);
 
-  Widget _cover() {
-    // Painted fallback (used when no imageUrl, or the network image fails to load)
-    final painted = Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: book.coverColor, borderRadius: BorderRadius.circular(14)),
-      alignment: Alignment.center,
-      child: Text(
-        book.title,
-        textAlign: TextAlign.center,
-        maxLines: 3,
-        style: TextStyle(color: book.textColor, fontWeight: FontWeight.bold, fontSize: 13),
-      ),
-    );
+    return Row(
+      children: [
+        const Text(
+          'Aa',
+          style: TextStyle(
+            fontSize: 13,
+            color: mutedColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
 
-    if (book.imageUrl == null) return painted;
+        const SizedBox(width: 5),
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Image.network(
-        book.imageUrl!,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return painted;
-        },
-        errorBuilder: (context, error, stackTrace) => painted,
-      ),
+        Expanded(
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 3,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 8,
+              ),
+              overlayShape: const RoundSliderOverlayShape(
+                overlayRadius: 16,
+              ),
+              activeTrackColor: const Color(0xFF3B82F6),
+              inactiveTrackColor: mutedColor.withOpacity(0.3),
+              thumbColor: const Color(0xFF3B82F6),
+            ),
+            child: Slider(
+              value: fontSize,
+              min: minFontSize,
+              max: maxFontSize,
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
     );
   }
+}
+
+// ================================================================
+// READER THEME BUTTON
+// ================================================================
+
+class ReaderThemeButton extends StatelessWidget {
+  final bool isDayMode;
+  final VoidCallback onTap;
+
+  const ReaderThemeButton({
+    super.key,
+    required this.isDayMode,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 0.78,
-            child: Stack(
-              children: [
-                _cover(),
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: GestureDetector(
-                    onTap: onFavoriteTap,
-                    child: Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                      child: Icon(
-                        book.isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                        color: book.isFavorite ? Colors.red : Colors.grey,
-                        size: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              Expanded(
-                child: Text(book.title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.black87)),
-              ),
-              GestureDetector(
-                onTap: onMoreTap,
-                child: const Icon(Icons.more_vert_rounded, size: 12, color: Colors.grey),
-              ),
-            ],
-          ),
-          Text(book.author, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-          const SizedBox(height: 2),
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: book.progress,
-                    minHeight: 5,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: const AlwaysStoppedAnimation(purple),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text('${(book.progress * 100).round()}%', style: const TextStyle(fontSize: 10, color: Colors.grey)),
-            ],
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.only(left: 6),
+        child: Icon(
+          isDayMode
+              ? Icons.light_mode_rounded
+              : Icons.dark_mode_rounded,
+          color: const Color(0xFFE8A23D),
+          size: 20,
+        ),
       ),
     );
   }
 }
 
-// lib/Widgets/CategoryFilterChips.dart
+// ================================================================
+// PAGE INFORMATION
+// ================================================================
 
-class CategoryFilterChips extends StatelessWidget {
-  final List<String> categories;
-  final String selected;
-  final ValueChanged<String> onSelected;
+class ReaderPageInfo extends StatelessWidget {
+  final int currentPage;
+  final int totalPages;
+  final int pagesLeftInChapter;
 
-  const CategoryFilterChips({
+  const ReaderPageInfo({
     super.key,
-    required this.categories,
-    required this.selected,
-    required this.onSelected,
+    required this.currentPage,
+    required this.totalPages,
+    required this.pagesLeftInChapter,
   });
-
-  static const purple = Color(0xFF6C4CE0);
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 38,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: categories.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          final c = categories[i];
-          final isActive = c == selected;
-          return GestureDetector(
-            onTap: () => onSelected(c),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isActive ? purple : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isActive ? purple : Colors.grey.shade300),
-              ),
-              child: Text(
-                c,
-                style: TextStyle(
-                  color: isActive ? Colors.white : Colors.black87,
-                  fontSize: 13,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                ),
-              ),
+    const mutedColor = Color(0xFF8A8375);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          '$currentPage / $totalPages',
+          style: const TextStyle(
+            fontSize: 12,
+            color: mutedColor,
+          ),
+        ),
+
+        Text(
+          '$pagesLeftInChapter pages left in chapter',
+          style: const TextStyle(
+            fontSize: 12,
+            color: mutedColor,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ================================================================
+// READER PAGE CONTENT
+// ================================================================
+
+class ReaderPageContent extends StatelessWidget {
+  final BookPageData page;
+  final double fontSize;
+  final Color textColor;
+  final Color chapterLabelColor;
+
+  const ReaderPageContent({
+    super.key,
+    required this.page,
+    required this.fontSize,
+    required this.textColor,
+    required this.chapterLabelColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        28,
+        20,
+        28,
+        30,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ======================================================
+          // CHAPTER
+          // ======================================================
+
+          Text(
+            page.chapterLabel,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5,
+              color: chapterLabelColor,
             ),
-          );
-        },
+          ),
+
+          const SizedBox(height: 12),
+
+          // ======================================================
+          // TITLE
+          // ======================================================
+
+          Text(
+            page.title,
+            style: TextStyle(
+              fontSize: fontSize + 5,
+              fontWeight: FontWeight.bold,
+              height: 1.25,
+              color: textColor,
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // ======================================================
+          // PARAGRAPHS
+          // ======================================================
+
+          ...page.paragraphs.map(
+            (paragraph) {
+              return Padding(
+                padding: const EdgeInsets.only(
+                  bottom: 18,
+                ),
+                child: Text(
+                  paragraph,
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    height: 1.75,
+                    color: textColor,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

@@ -2,7 +2,10 @@
 // ignore_for_file: unnecessary_non_null_assertion, unnecessary_null_comparison
 
 import 'package:bookverse/Views/FantansyBookscreen.dart';
+import 'package:bookverse/Views/HistoryBooks.dart';
 import 'package:bookverse/Views/RomanceBook.dart';
+import 'package:bookverse/Views/Scifibook.dart';
+import 'package:bookverse/Views/selfhelpbook.dart';
 import 'package:flutter/material.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -141,13 +144,13 @@ class CategoryList extends StatelessWidget {
         screen = const RomanceBooksScreen();
         break;
       case 'Self Help':
-        // screen = const SelfHelpBooksScreen();
+        screen = const SelfHelpBooksScreen();
         break;
       case 'History':
-        // screen = const HistoryBooksScreen();
+        screen = const HistoryBooksScreen();
         break;
       case 'Sci-Fi':
-        // screen = const SciFiBooksScreen();
+        screen = const SciFiBooksScreen();
         break;
       case 'More':
         _showMoreCategoriesSheet(context);

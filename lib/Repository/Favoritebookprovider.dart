@@ -1,13 +1,26 @@
+
 // lib/Providers/FavouriteBooksProvider.dart
 
 import 'package:flutter/foundation.dart';
 import 'package:bookverse/Models/BookModel.dart';
 
 class FavouriteBooksProvider extends ChangeNotifier {
+  // ============================================================
+  // FAVORITE BOOKS
+  // ============================================================
+
   final List<BookModel> _favoriteBooks = [];
+
+  // ============================================================
+  // GETTERS
+  // ============================================================
 
   List<BookModel> get favoriteBooks =>
       List.unmodifiable(_favoriteBooks);
+
+  // ============================================================
+  // CHECK FAVORITE
+  // ============================================================
 
   bool isFavorite(BookModel book) {
     return _favoriteBooks.any(
@@ -15,19 +28,30 @@ class FavouriteBooksProvider extends ChangeNotifier {
     );
   }
 
+  // ============================================================
+  // TOGGLE FAVORITE
+  // ============================================================
+
   void toggleFavorite(BookModel book) {
     final index = _favoriteBooks.indexWhere(
       (item) => _bookId(item) == _bookId(book),
     );
 
     if (index >= 0) {
+      // Remove favorite
       _favoriteBooks.removeAt(index);
     } else {
+      // Add favorite
       _favoriteBooks.add(book);
     }
 
+    // Update UI
     notifyListeners();
   }
+
+  // ============================================================
+  // REMOVE FAVORITE
+  // ============================================================
 
   void removeFavorite(BookModel book) {
     _favoriteBooks.removeWhere(
@@ -37,22 +61,34 @@ class FavouriteBooksProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _bookId(BookModel book) {
-    // Agar BookModel mein id available hai
-    // to id ko priority milegi.
-    //
-    // Agar id nahi hai to title + author use hoga.
+  // ============================================================
+  // CLEAR ALL FAVORITES
+  // ============================================================
 
+  void clearFavorites() {
+    _favoriteBooks.clear();
+
+    notifyListeners();
+  }
+
+  // ============================================================
+  // BOOK ID
+  // ============================================================
+
+  String _bookId(BookModel book) {
     try {
       final dynamic value = book;
 
       final id = value.id;
 
-      if (id != null && id.toString().isNotEmpty) {
+      if (id != null && id.toString().trim().isNotEmpty) {
         return id.toString();
       }
     } catch (_) {}
 
-    return '${book.title}_${book.author}'.toLowerCase();
+    // Agar id available nahi hai
+    return '${book.title}_${book.author}'
+        .trim()
+        .toLowerCase();
   }
 }
