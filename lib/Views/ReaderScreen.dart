@@ -1,12 +1,17 @@
+// lib/Screens/ReaderScreen.dart
+
 // ignore_for_file: unused_element
 
 import 'dart:convert';
 
 import 'package:bookverse/Models/BookModel.dart';
+import 'package:bookverse/Repository/AchievementProvider.dart';
 import 'package:bookverse/Repository/Favoritebookprovider.dart';
+import 'package:bookverse/Widgets/Favoritebookwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+
 
 class ReaderScreen extends StatefulWidget {
   final BookModel book;
@@ -46,6 +51,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   List<BookPageData> _pages = [];
 
+  // Prevent duplicate completion call.
+  bool _completionHandled = false;
+
   // ============================================================
   // INIT
   // ============================================================
@@ -58,7 +66,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   // ============================================================
-  // LOAD BOOK FROM API
+  // LOAD BOOK
   // ============================================================
 
   Future<void> _loadBook() async {
@@ -101,6 +109,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
         _isLoading = false;
         _errorMessage = null;
         _currentPage = 0;
+        _completionHandled = false;
       });
     } catch (e) {
       if (!mounted) return;
@@ -114,15 +123,11 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   // ============================================================
-  // CREATE READER PAGES
+  // CREATE PAGES
   // ============================================================
 
   List<BookPageData> _createPages(String text) {
     String cleanText = text;
-
-    // ----------------------------------------------------------
-    // PROJECT GUTENBERG HEADER / FOOTER
-    // ----------------------------------------------------------
 
     const startMarker =
         '*** START OF THE PROJECT GUTENBERG EBOOK';
@@ -167,9 +172,9 @@ class _ReaderScreenState extends State<ReaderScreen> {
       return [];
     }
 
-    // ----------------------------------------------------------
+    // ==========================================================
     // CHAPTER DETECTION
-    // ----------------------------------------------------------
+    // ==========================================================
 
     final lines = cleanText.split('\n');
 
@@ -227,17 +232,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
     flushParagraph();
 
-    // ----------------------------------------------------------
-    // IF NO BLOCKS
-    // ----------------------------------------------------------
+    // ==========================================================
+    // NO BLOCKS
+    // ==========================================================
 
     if (blocks.isEmpty) {
       return _splitPlainText(cleanText);
     }
 
-    // ----------------------------------------------------------
+    // ==========================================================
     // CREATE PAGES
-    // ----------------------------------------------------------
+    // ==========================================================
 
     const int charactersPerPage = 2600;
 
@@ -383,10 +388,38 @@ class _ReaderScreenState extends State<ReaderScreen> {
   }
 
   // ============================================================
-  // DOWNLOAD BOOK
+  // BOOK COMPLETION
   // ============================================================
 
- 
+  void _handleBookCompletion() {
+    if (_completionHandled) {
+      return;
+    }
+
+    if (_pages.isEmpty) {
+      return;
+    }
+
+    final achievementProvider =
+        context.read<AchievementProvider>();
+
+    // Already completed?
+    if (achievementProvider.isBookCompleted(widget.book)) {
+      _completionHandled = true;
+      return;
+    }
+
+    _completionHandled = true;
+
+    achievementProvider.completeBook(
+      widget.book,
+    );
+
+    _showMessage(
+      '🎉 Book completed! You earned a reading reward.',
+    );
+  }
+
   // ============================================================
   // SAFE FILE NAME
   // ============================================================
@@ -513,9 +546,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   // BACK
                   IconButton(
                     onPressed: () {
-                      Navigator.maybePop(
-                        context,
-                      );
+                      Navigator.maybePop(context);
                     },
                     icon: Icon(
                       Icons.arrow_back,
@@ -526,38 +557,26 @@ class _ReaderScreenState extends State<ReaderScreen> {
                   // ACTIONS
                   Row(
                     children: [
-                     
-                      // ==================================================
                       // CHAPTERS
-                      // ==================================================
-
                       IconButton(
-                        tooltip:
-                            'Table of contents',
-                        onPressed:
-                            _showChapterList,
+                        tooltip: 'Table of contents',
+                        onPressed: _showChapterList,
                         icon: Icon(
-                          Icons
-                              .format_list_bulleted_rounded,
+                          Icons.format_list_bulleted_rounded,
                           color: iconColor,
                           size: 21,
                         ),
                       ),
 
-                      // ==================================================
                       // FAVORITE
-                      // ==================================================
-
-                      Consumer<
-                          FavouriteBooksProvider>(
+                      Consumer<FavouriteBooksProvider>(
                         builder: (
                           context,
                           favoriteProvider,
                           child,
                         ) {
                           final isFavorite =
-                              favoriteProvider
-                                  .isFavorite(
+                              favoriteProvider.isFavorite(
                             widget.book,
                           );
 
@@ -581,8 +600,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 animation,
                               ) {
                                 return ScaleTransition(
-                                  scale:
-                                      animation,
+                                  scale: animation,
                                   child: child,
                                 );
                               },
@@ -607,10 +625,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         },
                       ),
 
-                      // ==================================================
                       // SEARCH
-                      // ==================================================
-
                       IconButton(
                         tooltip: 'Search',
                         onPressed: () {
@@ -645,8 +660,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
             // ============================================================
 
             Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(
+              padding: const EdgeInsets.fromLTRB(
                 20,
                 4,
                 20,
@@ -674,26 +688,20 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         trackHeight: 3,
                         thumbShape:
                             const RoundSliderThumbShape(
-                          enabledThumbRadius:
-                              8,
+                          enabledThumbRadius: 8,
                         ),
                         overlayShape:
                             const RoundSliderOverlayShape(
                           overlayRadius: 16,
                         ),
                         activeTrackColor:
-                            const Color(
-                          0xFF3B82F6,
-                        ),
+                            const Color(0xFF3B82F6),
                         inactiveTrackColor:
-                            mutedColor
-                                .withOpacity(
+                            mutedColor.withOpacity(
                           0.3,
                         ),
                         thumbColor:
-                            const Color(
-                          0xFF3B82F6,
-                        ),
+                            const Color(0xFF3B82F6),
                       ),
                       child: Slider(
                         value: _fontSize,
@@ -708,10 +716,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     ),
                   ),
 
-                  // ======================================================
                   // BRIGHTNESS
-                  // ======================================================
-
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -726,13 +731,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
                       ),
                       child: Icon(
                         _isDayMode
-                            ? Icons
-                                .light_mode_rounded
-                            : Icons
-                                .dark_mode_rounded,
-                        color: const Color(
-                          0xFFE8A23D,
-                        ),
+                            ? Icons.light_mode_rounded
+                            : Icons.dark_mode_rounded,
+                        color:
+                            const Color(0xFFE8A23D),
                         size: 20,
                       ),
                     ),
@@ -746,8 +748,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
             // ============================================================
 
             Padding(
-              padding:
-                  const EdgeInsets.fromLTRB(
+              padding: const EdgeInsets.fromLTRB(
                 20,
                 0,
                 20,
@@ -755,8 +756,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
               ),
               child: Row(
                 mainAxisAlignment:
-                    MainAxisAlignment
-                        .spaceBetween,
+                    MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     _activePage == null
@@ -800,17 +800,12 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (_isLoading) {
       return Center(
         child: Column(
-          mainAxisSize:
-              MainAxisSize.min,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const CircularProgressIndicator(
               color: Color(0xFF9C6B3E),
             ),
-
-            const SizedBox(
-              height: 14,
-            ),
-
+            const SizedBox(height: 14),
             Text(
               'Loading book...',
               style: TextStyle(
@@ -830,38 +825,28 @@ class _ReaderScreenState extends State<ReaderScreen> {
     if (_errorMessage != null) {
       return Center(
         child: Padding(
-          padding:
-              const EdgeInsets.all(30),
+          padding: const EdgeInsets.all(30),
           child: Column(
-            mainAxisSize:
-                MainAxisSize.min,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 Icons.menu_book_rounded,
                 size: 48,
-                color:
-                    textColor.withOpacity(
-                  0.5,
-                ),
+                color: textColor.withOpacity(0.5),
               ),
 
-              const SizedBox(
-                height: 14,
-              ),
+              const SizedBox(height: 14),
 
               Text(
                 _errorMessage!,
-                textAlign:
-                    TextAlign.center,
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: textColor,
                   fontSize: 14,
                 ),
               ),
 
-              const SizedBox(
-                height: 14,
-              ),
+              const SizedBox(height: 14),
 
               ElevatedButton(
                 onPressed: () {
@@ -872,9 +857,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
                   _loadBook();
                 },
-                child: const Text(
-                  'Retry',
-                ),
+                child: const Text('Retry'),
               ),
             ],
           ),
@@ -904,11 +887,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
     return PageView.builder(
       controller: _pageController,
       itemCount: _pages.length,
+
       onPageChanged: (index) {
         setState(() {
           _currentPage = index;
         });
+
+        // ======================================================
+        // BOOK COMPLETION
+        // ======================================================
+
+        if (index == _pages.length - 1) {
+          _handleBookCompletion();
+        }
       },
+
       itemBuilder: (
         context,
         index,
@@ -939,9 +932,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
     final Map<String, int> chapters = {};
 
-    for (int i = 0;
-        i < _pages.length;
-        i++) {
+    for (int i = 0; i < _pages.length; i++) {
       chapters.putIfAbsent(
         _pages[i].chapterLabel,
         () => i,
@@ -952,8 +943,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
       context: context,
       backgroundColor: Colors.white,
       isScrollControlled: true,
-      shape:
-          const RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(
           top: Radius.circular(24),
@@ -968,26 +958,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
                         .height *
                     0.65,
             child: Padding(
-              padding:
-                  const EdgeInsets.all(
-                20,
-              ),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment:
                     CrossAxisAlignment.start,
                 children: [
-                  // --------------------------------------------------
                   // HEADER
-                  // --------------------------------------------------
-
                   Row(
                     children: [
                       Container(
                         padding:
-                            const EdgeInsets
-                                .all(
-                          9,
-                        ),
+                            const EdgeInsets.all(9),
                         decoration:
                             BoxDecoration(
                           color:
@@ -995,24 +976,19 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             0xFFF2E5D8,
                           ),
                           borderRadius:
-                              BorderRadius
-                                  .circular(
+                              BorderRadius.circular(
                             12,
                           ),
                         ),
                         child: const Icon(
                           Icons.menu_book_rounded,
                           color:
-                              Color(
-                            0xFF9C6B3E,
-                          ),
+                              Color(0xFF9C6B3E),
                           size: 20,
                         ),
                       ),
 
-                      const SizedBox(
-                        width: 12,
-                      ),
+                      const SizedBox(width: 12),
 
                       const Expanded(
                         child: Column(
@@ -1022,24 +998,17 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           children: [
                             Text(
                               'Chapters',
-                              style:
-                                  TextStyle(
-                                fontSize:
-                                    19,
+                              style: TextStyle(
+                                fontSize: 19,
                                 fontWeight:
-                                    FontWeight
-                                        .bold,
+                                    FontWeight.bold,
                               ),
                             ),
-                            SizedBox(
-                              height: 2,
-                            ),
+                            SizedBox(height: 2),
                             Text(
                               'Jump to a chapter',
-                              style:
-                                  TextStyle(
-                                fontSize:
-                                    12,
+                              style: TextStyle(
+                                fontSize: 12,
                                 color:
                                     Colors.grey,
                               ),
@@ -1050,9 +1019,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
                       IconButton(
                         onPressed: () {
-                          Navigator.pop(
-                            context,
-                          );
+                          Navigator.pop(context);
                         },
                         icon: const Icon(
                           Icons.close_rounded,
@@ -1061,33 +1028,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
                     ],
                   ),
 
-                  const SizedBox(
-                    height: 16,
-                  ),
+                  const SizedBox(height: 16),
 
-                  // --------------------------------------------------
                   // CHAPTERS
-                  // --------------------------------------------------
-
                   Expanded(
-                    child:
-                        ListView.separated(
+                    child: ListView.separated(
                       itemCount:
                           chapters.length,
                       separatorBuilder:
-                          (
-                        context,
-                        index,
-                      ) {
+                          (context, index) {
                         return const Divider(
                           height: 1,
                         );
                       },
                       itemBuilder:
-                          (
-                        context,
-                        index,
-                      ) {
+                          (context, index) {
                         final entry =
                             chapters.entries
                                 .elementAt(
@@ -1114,18 +1069,14 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                       ),
                             child: Text(
                               '${index + 1}',
-                              style:
-                                  TextStyle(
-                                color:
-                                    isCurrent
-                                        ? Colors
-                                            .white
-                                        : const Color(
-                                            0xFF9C6B3E,
-                                          ),
+                              style: TextStyle(
+                                color: isCurrent
+                                    ? Colors.white
+                                    : const Color(
+                                        0xFF9C6B3E,
+                                      ),
                                 fontWeight:
-                                    FontWeight
-                                        .bold,
+                                    FontWeight.bold,
                               ),
                             ),
                           ),
@@ -1136,8 +1087,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             overflow:
                                 TextOverflow
                                     .ellipsis,
-                            style:
-                                TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight:
                                   isCurrent
@@ -1148,23 +1098,22 @@ class _ReaderScreenState extends State<ReaderScreen> {
                             ),
                           ),
 
-                          trailing:
-                              isCurrent
-                                  ? const Icon(
-                                      Icons
-                                          .check_circle_rounded,
-                                      color:
-                                          Color(
-                                        0xFF9C6B3E,
-                                      ),
-                                      size: 20,
-                                    )
-                                  : const Icon(
-                                      Icons
-                                          .chevron_right_rounded,
-                                      color:
-                                          Colors.grey,
-                                    ),
+                          trailing: isCurrent
+                              ? const Icon(
+                                  Icons
+                                      .check_circle_rounded,
+                                  color:
+                                      Color(
+                                    0xFF9C6B3E,
+                                  ),
+                                  size: 20,
+                                )
+                              : const Icon(
+                                  Icons
+                                      .chevron_right_rounded,
+                                  color:
+                                      Colors.grey,
+                                ),
 
                           onTap: () {
                             Navigator.pop(
@@ -1179,8 +1128,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 milliseconds:
                                     400,
                               ),
-                              curve: Curves
-                                  .easeInOut,
+                              curve:
+                                  Curves.easeInOut,
                             );
                           },
                         );
@@ -1233,106 +1182,4 @@ class BookPageData {
     required this.pagesLeftInChapter,
     required this.paragraphs,
   });
-}
-
-// ================================================================
-// READER PAGE CONTENT
-// ================================================================
-
-class ReaderPageContent
-    extends StatelessWidget {
-  final BookPageData page;
-  final double fontSize;
-  final Color textColor;
-  final Color chapterLabelColor;
-
-  const ReaderPageContent({
-    super.key,
-    required this.page,
-    required this.fontSize,
-    required this.textColor,
-    required this.chapterLabelColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding:
-          const EdgeInsets.fromLTRB(
-        28,
-        20,
-        28,
-        30,
-      ),
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-        children: [
-          // ======================================================
-          // CHAPTER
-          // ======================================================
-
-          Text(
-            page.chapterLabel,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight:
-                  FontWeight.bold,
-              letterSpacing: 1.5,
-              color:
-                  chapterLabelColor,
-            ),
-          ),
-
-          const SizedBox(
-            height: 12,
-          ),
-
-          // ======================================================
-          // TITLE
-          // ======================================================
-
-          Text(
-            page.title,
-            style: TextStyle(
-              fontSize: fontSize + 5,
-              fontWeight:
-                  FontWeight.bold,
-              height: 1.25,
-              color: textColor,
-            ),
-          ),
-
-          const SizedBox(
-            height: 24,
-          ),
-
-          // ======================================================
-          // PARAGRAPHS
-          // ======================================================
-
-          ...page.paragraphs.map(
-            (paragraph) {
-              return Padding(
-                padding:
-                    const EdgeInsets.only(
-                  bottom: 18,
-                ),
-                child: Text(
-                  paragraph,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    height: 1.75,
-                    color: textColor,
-                  ),
-                  textAlign:
-                      TextAlign.left,
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
 }

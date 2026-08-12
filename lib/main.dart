@@ -1,3 +1,4 @@
+import 'package:bookverse/Repository/AchievementProvider.dart';
 import 'package:bookverse/Repository/Book-Repository.dart';
 import 'package:bookverse/Repository/Favoritebookprovider.dart';
 import 'package:bookverse/ViewModels/Book-view-model.dart';
@@ -18,7 +19,12 @@ void main() {
             repository: BookRepository(),
           ),
         ),
+        
 
+        ChangeNotifierProvider(
+      create: (_) => AchievementProvider(),
+      
+    ),
         // ======================================================
         // FAVOURITE BOOKS PROVIDER
         // ======================================================

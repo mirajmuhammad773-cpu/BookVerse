@@ -1,3 +1,10 @@
+// ignore_for_file: file_names, prefer_const_constructors
+
+import 'package:bookverse/Views/AchievementsScreen.dart';
+import 'package:bookverse/Views/DownloadBook.dart';
+import 'package:bookverse/Views/PaymentHistory.dart';
+import 'package:bookverse/Views/ReadingGoalscreen.dart';
+import 'package:bookverse/Views/ReadingHistory.dart';
 import 'package:bookverse/Views/SettingScreen.dart';
 import 'package:bookverse/Widgets/Profilewidget.dart';
 import 'package:flutter/material.dart';
@@ -59,32 +66,41 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.favorite_rounded,
                     iconColor: const Color(0xFFEC4899),
                     label: 'Reading Goals',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>ReadingGoalsScreen()));
+                    },
                   ),
                   ProfileMenuData(
                     icon: Icons.emoji_events_rounded,
                     iconColor: const Color(0xFF8B5CF6),
                     label: 'Achievements',
-                    trailingText: '12 / 28',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>AchievementScreen()));
+                    },
                   ),
                   ProfileMenuData(
                     icon: Icons.download_rounded,
                     iconColor: const Color(0xFF3B82F6),
                     label: 'Downloads',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>DownloadedBooksScreen()));
+                    },
                   ),
                   ProfileMenuData(
                     icon: Icons.history_rounded,
                     iconColor: const Color(0xFF06B6D4),
                     label: 'Reading History',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>ReadingHistoryScreen()));
+                    },
                   ),
                   ProfileMenuData(
                     icon: Icons.receipt_long_rounded,
                     iconColor: const Color(0xFF10B981),
                     label: 'Payment History',
-                    onTap: () {},
+                    onTap: () {
+                       Navigator.push(context, MaterialPageRoute(builder: (context)=>PaymentHistoryScreen()));
+                    },
                   ),
                   ProfileMenuData(
                     icon: Icons.help_outline_rounded,
