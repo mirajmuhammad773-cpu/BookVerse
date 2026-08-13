@@ -1,7 +1,10 @@
 // lib/Screens/BookVerseSplashScreen.dart
 
 import 'dart:math';
+
 import 'package:bookverse/Auths/SigninScreen.dart';
+import 'package:bookverse/Views/BooknaScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class BookVerseSplashScreen extends StatefulWidget {
@@ -53,8 +56,49 @@ class _BookVerseSplashScreenState extends State<BookVerseSplashScreen>
       duration: const Duration(milliseconds: 3600),
     )..repeat();
 
-    Future.delayed(const Duration(seconds: 5), () {
-      if (!mounted) return;
+    _checkUserAndNavigate();
+  }
+
+  // ============================================================
+  // CHECK FIREBASE LOGIN
+  // ============================================================
+
+  Future<void> _checkUserAndNavigate() async {
+    // Splash ko minimum 5 seconds show karna hai
+    await Future.delayed(const Duration(seconds: 5));
+
+    if (!mounted) return;
+
+    // Firebase se current logged-in user check
+    final User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      // ========================================================
+      // USER ALREADY LOGGED IN
+      // ========================================================
+
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          transitionDuration: const Duration(milliseconds: 700),
+          pageBuilder: (_, animation, secondaryAnimation) =>
+              const BookNavScreen(),
+          transitionsBuilder:
+              (_, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeInOut,
+              ),
+              child: child,
+            );
+          },
+        ),
+      );
+    } else {
+      // ========================================================
+      // USER NOT LOGGED IN
+      // ========================================================
 
       Navigator.pushReplacement(
         context,
@@ -74,7 +118,7 @@ class _BookVerseSplashScreenState extends State<BookVerseSplashScreen>
           },
         ),
       );
-    });
+    }
   }
 
   @override
@@ -99,6 +143,10 @@ class _BookVerseSplashScreenState extends State<BookVerseSplashScreen>
 
           return Stack(
             children: [
+              // ==================================================
+              // BACKGROUND
+              // ==================================================
+
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
@@ -121,11 +169,19 @@ class _BookVerseSplashScreenState extends State<BookVerseSplashScreen>
                 ),
               ),
 
+              // ==================================================
+              // STARS
+              // ==================================================
+
               Positioned.fill(
                 child: CustomPaint(
                   painter: _StarPainter(stars, t),
                 ),
               ),
+
+              // ==================================================
+              // BOOK ANIMATION
+              // ==================================================
 
               Align(
                 alignment: const Alignment(0, -0.35),
@@ -183,6 +239,10 @@ class _BookVerseSplashScreenState extends State<BookVerseSplashScreen>
                 ),
               ),
 
+              // ==================================================
+              // BOTTOM CONTENT
+              // ==================================================
+
               Positioned(
                 left: 0,
                 right: 0,
@@ -236,8 +296,7 @@ class _BookVerseSplashScreenState extends State<BookVerseSplashScreen>
                     const SizedBox(height: 22),
 
                     Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(
                         progressSegments,
                         (i) {
@@ -274,6 +333,10 @@ class _BookVerseSplashScreenState extends State<BookVerseSplashScreen>
   }
 }
 
+// ============================================================
+// STAR PAINTER
+// ============================================================
+
 class _StarPainter extends CustomPainter {
   final List<_Star> stars;
   final double t;
@@ -304,5 +367,7 @@ class _StarPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _StarPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _StarPainter oldDelegate) {
+    return true;
+  }
 }

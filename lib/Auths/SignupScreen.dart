@@ -1,26 +1,51 @@
-// lib/Screens/CreateAccountScreen.dart
-import 'package:bookverse/Auths/SigninScreen.dart';
+import 'package:bookverse/ViewModels/UserProvider.dart';
+import 'package:bookverse/Views/BooknaScreen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../Widgets/Signupwidget.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
 
   @override
-  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
+  State<CreateAccountScreen> createState() =>
+      _CreateAccountScreenState();
 }
 
-class _CreateAccountScreenState extends State<CreateAccountScreen> {
-  static const purple = Color(0xFF8B5CF6);
-  static const indigo = Color(0xFF6366F1);
+class _CreateAccountScreenState
+    extends State<CreateAccountScreen> {
+  // ============================================================
+  // CONTROLLERS
+  // ============================================================
 
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  final TextEditingController _nameController =
+      TextEditingController();
+
+  final TextEditingController _emailController =
+      TextEditingController();
+
+  final TextEditingController _passwordController =
+      TextEditingController();
+
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  // ============================================================
+  // LOCAL UI STATE
+  // ============================================================
 
   bool _obscurePassword = true;
+
   bool _obscureConfirmPassword = true;
-  bool _agreedToTerms = false;
+
+  bool _acceptedTerms = false;
+
+  bool _googleLoading = false;
+
+  // ============================================================
+  // DISPOSE
+  // ============================================================
 
   @override
   void dispose() {
@@ -28,220 +53,546 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+
     super.dispose();
   }
 
+  // ============================================================
+  // MESSAGE
+  // ============================================================
+
+  void _showMessage(
+    String message, {
+    bool error = true,
+  }) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message.replaceFirst(
+              'Exception: ',
+              '',
+            ),
+          ),
+          backgroundColor:
+              error ? Colors.redAccent : Colors.green,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+  }
+
+  // ============================================================
+  // EMAIL VALIDATION
+  // ============================================================
+
+  bool _isValidEmail(String email) {
+    return RegExp(
+      r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+    ).hasMatch(email);
+  }
+
+  // ============================================================
+  // CREATE ACCOUNT
+  // ============================================================
+
+  Future<void> _createAccount() async {
+    FocusScope.of(context).unfocus();
+
+    final String name =
+        _nameController.text.trim();
+
+    final String email =
+        _emailController.text.trim();
+
+    final String password =
+        _passwordController.text;
+
+    final String confirmPassword =
+        _confirmPasswordController.text;
+
+    // ==========================================================
+    // NAME
+    // ==========================================================
+
+    if (name.isEmpty) {
+      _showMessage(
+        'Please enter your name.',
+      );
+      return;
+    }
+
+    if (name.length < 2) {
+      _showMessage(
+        'Please enter a valid name.',
+      );
+      return;
+    }
+
+    // ==========================================================
+    // EMAIL
+    // ==========================================================
+
+    if (email.isEmpty) {
+      _showMessage(
+        'Please enter your email.',
+      );
+      return;
+    }
+
+    if (!_isValidEmail(email)) {
+      _showMessage(
+        'Please enter a valid email address.',
+      );
+      return;
+    }
+
+    // ==========================================================
+    // PASSWORD
+    // ==========================================================
+
+    if (password.isEmpty) {
+      _showMessage(
+        'Please enter a password.',
+      );
+      return;
+    }
+
+    if (password.length < 6) {
+      _showMessage(
+        'Password must be at least 6 characters.',
+      );
+      return;
+    }
+
+    // ==========================================================
+    // CONFIRM PASSWORD
+    // ==========================================================
+
+    if (confirmPassword.isEmpty) {
+      _showMessage(
+        'Please confirm your password.',
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showMessage(
+        'Passwords do not match.',
+      );
+      return;
+    }
+
+    // ==========================================================
+    // TERMS
+    // ==========================================================
+
+    if (!_acceptedTerms) {
+      _showMessage(
+        'Please accept the Terms of Service and Privacy Policy.',
+      );
+      return;
+    }
+
+    // ==========================================================
+    // PROVIDER
+    // ==========================================================
+
+    final UserProvider provider =
+        context.read<UserProvider>();
+
+    final bool success =
+        await provider.signUp(
+      name: name,
+      email: email,
+      password: password,
+    );
+
+    if (!mounted) return;
+
+    // ==========================================================
+    // ERROR
+    // ==========================================================
+
+    if (!success) {
+      _showMessage(
+        provider.errorMessage ??
+            'Unable to create account.',
+      );
+      return;
+    }
+
+    // ==========================================================
+    // SUCCESS
+    // ==========================================================
+
+    _showMessage(
+      'Account created successfully!',
+      error: false,
+    );
+
+    // ==========================================================
+    // NAVIGATION
+    // ==========================================================
+    
+    // Yahan apni next screen add karni hai.
+    
+    // Example:
+    
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const BookNavScreen(),
+      ),
+    );
+    
+  }
+
+  // ============================================================
+  // GOOGLE SIGN UP
+  // ============================================================
+
+  Future<void> _signUpWithGoogle() async {
+    FocusScope.of(context).unfocus();
+
+    // ==========================================================
+    // TERMS
+    // ==========================================================
+
+    if (!_acceptedTerms) {
+      _showMessage(
+        'Please accept the Terms of Service and Privacy Policy.',
+      );
+      return;
+    }
+
+    if (_googleLoading) {
+      return;
+    }
+
+    setState(() {
+      _googleLoading = true;
+    });
+
+    try {
+      final UserProvider provider =
+          context.read<UserProvider>();
+
+      final bool success =
+          await provider.signInWithGoogle();
+
+      if (!mounted) return;
+
+      if (!success) {
+        _showMessage(
+          provider.errorMessage ??
+              'Google Sign-In failed.',
+        );
+        return;
+      }
+
+      _showMessage(
+        'Google account connected successfully!',
+        error: false,
+      );
+
+      // ========================================================
+      // NAVIGATION
+      // ========================================================
+      //
+      // Example:
+      //
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const BookNavScreen(),
+        ),
+      );
+      
+      // ========================================================
+    } finally {
+      if (mounted) {
+        setState(() {
+          _googleLoading = false;
+        });
+      }
+    }
+  }
+
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 10),
-
-              
-
-              const Text('Create Account',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
-              const SizedBox(height: 6),
-              Text('Join BookVerse and start your reading\njourney today.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.4)),
-              const SizedBox(height: 26),
-
-              _field(controller: _nameController, hint: 'Full Name', icon: Icons.person_outline_rounded),
-              const SizedBox(height: 14),
-              _field(controller: _emailController, hint: 'Email Address', icon: Icons.mail_outline_rounded, keyboardType: TextInputType.emailAddress),
-              const SizedBox(height: 14),
-              _field(
-                controller: _passwordController,
-                hint: 'Password',
-                icon: Icons.lock_outline_rounded,
-                obscureText: _obscurePassword,
-                trailing: IconButton(
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                  icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.grey, size: 20),
-                ),
+    return Consumer<UserProvider>(
+      builder: (
+        context,
+        userProvider,
+        child,
+      ) {
+        return Scaffold(
+          backgroundColor:
+              const Color(0xFFF8F8FC),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 20,
               ),
-              const SizedBox(height: 14),
-              _field(
-                controller: _confirmPasswordController,
-                hint: 'Confirm Password',
-                icon: Icons.lock_outline_rounded,
-                obscureText: _obscureConfirmPassword,
-                trailing: IconButton(
-                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-                  icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: Colors.grey, size: 20),
-                ),
-              ),
-              const SizedBox(height: 18),
-
-              // ---------------- Terms checkbox ----------------
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: Checkbox(
-                      value: _agreedToTerms,
-                      onChanged: (v) => setState(() => _agreedToTerms = v ?? false),
-                      activeColor: purple,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: RichText(
-                        text: TextSpan(
-                          style: TextStyle(fontSize: 12.5, color: Colors.grey.shade700, height: 1.4),
-                          children: const [
-                            TextSpan(text: 'I agree to the '),
-                            TextSpan(text: 'Terms of Service', style: TextStyle(color: purple, fontWeight: FontWeight.w600)),
-                            TextSpan(text: ' and '),
-                            TextSpan(text: 'Privacy Policy', style: TextStyle(color: purple, fontWeight: FontWeight.w600)),
-                          ],
+                  // ==================================================
+                  // BACK BUTTON
+                  // ==================================================
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.grey.shade200,
                         ),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        size: 18,
                       ),
                     ),
                   ),
+
+                  const SizedBox(height: 28),
+
+                  // ==================================================
+                  // TITLE
+                  // ==================================================
+
+                  const Text(
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'Create your account and start reading.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  // ==================================================
+                  // NAME
+                  // ==================================================
+
+                  CreateAccountField(
+                    controller: _nameController,
+                    hint: 'Full Name',
+                    icon:
+                        Icons.person_outline_rounded,
+                    keyboardType:
+                        TextInputType.name,
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ==================================================
+                  // EMAIL
+                  // ==================================================
+
+                  CreateAccountField(
+                    controller: _emailController,
+                    hint: 'Email Address',
+                    icon:
+                        Icons.email_outlined,
+                    keyboardType:
+                        TextInputType.emailAddress,
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ==================================================
+                  // PASSWORD
+                  // ==================================================
+
+                  CreateAccountField(
+                    controller: _passwordController,
+                    hint: 'Password',
+                    icon:
+                        Icons.lock_outline_rounded,
+                    obscureText:
+                        _obscurePassword,
+                    trailing: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword =
+                              !_obscurePassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons
+                                .visibility_off_outlined
+                            : Icons
+                                .visibility_outlined,
+                        color:
+                            Colors.grey.shade500,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // ==================================================
+                  // CONFIRM PASSWORD
+                  // ==================================================
+
+                  CreateAccountField(
+                    controller:
+                        _confirmPasswordController,
+                    hint: 'Confirm Password',
+                    icon:
+                        Icons.lock_outline_rounded,
+                    obscureText:
+                        _obscureConfirmPassword,
+                    trailing: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword =
+                              !_obscureConfirmPassword;
+                        });
+                      },
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons
+                                .visibility_off_outlined
+                            : Icons
+                                .visibility_outlined,
+                        color:
+                            Colors.grey.shade500,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ==================================================
+                  // TERMS
+                  // ==================================================
+
+                  CreateAccountTerms(
+                    value: _acceptedTerms,
+                    onChanged: (value) {
+                      setState(() {
+                        _acceptedTerms =
+                            value ?? false;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ==================================================
+                  // CREATE ACCOUNT
+                  // ==================================================
+
+                  CreateAccountButton(
+                    onPressed:
+                        userProvider.isLoading
+                            ? null
+                            : _createAccount,
+                    isLoading:
+                        userProvider.isLoading,
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // ==================================================
+                  // DIVIDER
+                  // ==================================================
+
+                  const CreateAccountDivider(),
+
+                  const SizedBox(height: 22),
+
+                  // ==================================================
+                  // GOOGLE
+                  // ==================================================
+
+                  Center(
+                    child:
+                        CreateAccountSocialButton(
+                      onTap:
+                          _googleLoading
+                              ? null
+                              : _signUpWithGoogle,
+                      child: _googleLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child:
+                                  CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'G',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight:
+                                    FontWeight.bold,
+                                color:
+                                    Color(0xFF4285F4),
+                              ),
+                            ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  // ==================================================
+                  // SIGN IN
+                  // ==================================================
+
+                  Center(
+                    child:
+                        CreateAccountSignInLink(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
                 ],
-              ),
-              const SizedBox(height: 20),
-
-              // ---------------- Create Account button ----------------
-              Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [purple, indigo]),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [BoxShadow(color: purple.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8))],
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => const BookVerseSignInScreen()));
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Create Account', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 22),
-
-              // ---------------- Divider ----------------
-              Row(
-                children: [
-                  Expanded(child: Divider(color: Colors.grey.shade300)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text('or sign up with', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
-                  ),
-                  Expanded(child: Divider(color: Colors.grey.shade300)),
-                ],
-              ),
-              const SizedBox(height: 18),
-
-              // ---------------- Social buttons ----------------
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _socialButton(child: const Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF4285F4)))),
-                  const SizedBox(width: 16),
-                  _socialButton(background: Colors.black, child: const Icon(Icons.apple, color: Colors.white, size: 24)),
-                  const SizedBox(width: 16),
-                  _socialButton(background: const Color(0xFF1877F2), child: const Icon(Icons.facebook_rounded, color: Colors.white, size: 24)),
-                ],
-              ),
-              const SizedBox(height: 22),
-
-              // ---------------- Sign in link ----------------
-              Center(
-                child: RichText(
-                  text: TextSpan(
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
-                    children: const [
-                      TextSpan(text: 'Already have an account? '),
-                      TextSpan(text: 'Sign In', style: TextStyle(color: purple, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _field({
-    required TextEditingController controller,
-    required String hint,
-    required IconData icon,
-    Widget? trailing,
-    bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade500, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: controller,
-              obscureText: obscureText,
-              keyboardType: keyboardType,
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
               ),
             ),
           ),
-          if (trailing != null) trailing,
-        ],
-      ),
-    );
-  }
-
-  Widget _socialButton({required Widget child, Color background = Colors.white}) {
-    return Container(
-      width: 52,
-      height: 52,
-      decoration: BoxDecoration(
-        color: background,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.grey.shade200),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8)],
-      ),
-      child: Center(child: child),
+        );
+      },
     );
   }
 }

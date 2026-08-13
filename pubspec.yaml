@@ -14,15 +14,18 @@ dependencies:
   # State management
   provider: 
   http: 
-  # Book Download
-  # Navigation
-  go_router: 
 
+  # Firebase Authinatications
+  firebase_core: 
+  firebase_auth: 
+  cloud_firestore: 
+
+  # Sign in with google
+  google_sign_in: 
   # Typography
   google_fonts: 
 
-  # Networking (wired up in core/network when backend is connected)
-  dio: 
+   
 
   
   # Images

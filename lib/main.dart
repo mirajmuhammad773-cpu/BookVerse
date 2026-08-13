@@ -2,14 +2,22 @@ import 'package:bookverse/Repository/AchievementProvider.dart';
 import 'package:bookverse/Repository/Book-Repository.dart';
 import 'package:bookverse/Repository/Favoritebookprovider.dart';
 import 'package:bookverse/ViewModels/Book-view-model.dart';
+import 'package:bookverse/ViewModels/UserProvider.dart';
 import 'package:bookverse/Views/SplashScreen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp( );
   runApp(
     MultiProvider(
       providers: [
+
+         ChangeNotifierProvider<UserProvider>(
+          create: (_) => UserProvider(),
+        ),
         // ======================================================
         // BOOK PROVIDER
         // ======================================================
@@ -22,9 +30,10 @@ void main() {
         
 
         ChangeNotifierProvider(
-      create: (_) => AchievementProvider(),
-      
-    ),
+         create: (_) => AchievementProvider(),
+       ),
+
+       
         // ======================================================
         // FAVOURITE BOOKS PROVIDER
         // ======================================================
