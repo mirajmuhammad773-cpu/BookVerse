@@ -4,16 +4,8 @@ import '../Models/UserModel.dart';
 import '../Repository/UserRepository.dart';
 
 class UserProvider extends ChangeNotifier {
-  // ============================================================
-  // REPOSITORY
-  // ============================================================
-
   final UserRepository _repository =
       UserRepository();
-
-  // ============================================================
-  // STATE
-  // ============================================================
 
   UserModel? _user;
 
@@ -22,10 +14,6 @@ class UserProvider extends ChangeNotifier {
   bool _isInitialized = false;
 
   String? _errorMessage;
-
-  // ============================================================
-  // GETTERS
-  // ============================================================
 
   UserModel? get user => _user;
 
@@ -47,18 +35,10 @@ class UserProvider extends ChangeNotifier {
   String get userEmail =>
       _user?.email ?? '';
 
-  // ============================================================
-  // CLEAR ERROR
-  // ============================================================
-
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
-
-  // ============================================================
-  // SET LOADING
-  // ============================================================
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -66,7 +46,7 @@ class UserProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // LOAD CURRENT USER
+  // CURRENT USER
   // ============================================================
 
   Future<void> loadCurrentUser() async {
@@ -81,7 +61,10 @@ class UserProvider extends ChangeNotifier {
       _isInitialized = true;
     } catch (e) {
       _errorMessage =
-          e.toString();
+          e.toString().replaceFirst(
+            'Exception: ',
+            '',
+          );
 
       _isInitialized = true;
     } finally {
@@ -113,7 +96,10 @@ class UserProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage =
-          e.toString();
+          e.toString().replaceFirst(
+            'Exception: ',
+            '',
+          );
 
       return false;
     } finally {
@@ -122,7 +108,7 @@ class UserProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // LOGIN
+  // EMAIL LOGIN
   // ============================================================
 
   Future<bool> login({
@@ -143,7 +129,10 @@ class UserProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage =
-          e.toString();
+          e.toString().replaceFirst(
+            'Exception: ',
+            '',
+          );
 
       return false;
     } finally {
@@ -167,7 +156,10 @@ class UserProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage =
-          e.toString();
+          e.toString().replaceFirst(
+            'Exception: ',
+            '',
+          );
 
       return false;
     } finally {
@@ -206,7 +198,10 @@ class UserProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage =
-          e.toString();
+          e.toString().replaceFirst(
+            'Exception: ',
+            '',
+          );
 
       return false;
     } finally {
@@ -228,7 +223,10 @@ class UserProvider extends ChangeNotifier {
       _errorMessage = null;
     } catch (e) {
       _errorMessage =
-          e.toString();
+          e.toString().replaceFirst(
+            'Exception: ',
+            '',
+          );
     } finally {
       _setLoading(false);
     }
@@ -251,7 +249,10 @@ class UserProvider extends ChangeNotifier {
       return true;
     } catch (e) {
       _errorMessage =
-          e.toString();
+          e.toString().replaceFirst(
+            'Exception: ',
+            '',
+          );
 
       return false;
     } finally {

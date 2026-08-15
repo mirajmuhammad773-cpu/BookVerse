@@ -1,6 +1,6 @@
 // lib/Screens/AchievementScreen.dart
 
-import 'package:bookverse/Repository/AchievementProvider.dart';
+import 'package:bookverse/ViewModels/AchievementProvider.dart';
 import 'package:bookverse/Widgets/Achievementwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +19,30 @@ class _AchievementScreenState extends State<AchievementScreen> {
   String _selectedCategory = 'All';
 
   // ============================================================
+  // INIT
+  // ============================================================
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadAchievementData();
+    });
+  }
+
+  // ============================================================
+  // LOAD BACKEND DATA
+  // ============================================================
+
+  Future<void> _loadAchievementData() async {
+    final provider =
+        context.read<AchievementProvider>();
+
+    await provider.loadAchievements();
+  }
+
+  // ============================================================
   // FILTER ACHIEVEMENTS
   // ============================================================
 
@@ -32,7 +56,8 @@ class _AchievementScreenState extends State<AchievementScreen> {
     return provider.achievements
         .where(
           (achievement) =>
-              achievement.category == _selectedCategory,
+              achievement.category ==
+              _selectedCategory,
         )
         .toList();
   }
@@ -50,112 +75,177 @@ class _AchievementScreenState extends State<AchievementScreen> {
         child,
       ) {
         final achievements =
-            _filteredAchievements(achievementProvider);
+            _filteredAchievements(
+          achievementProvider,
+        );
 
         return Scaffold(
-          backgroundColor: const Color(0xFFF9F9FD),
+          backgroundColor:
+              const Color(0xFFF9F9FD),
 
           body: SafeArea(
             child: Column(
               children: [
+
                 // ==================================================
                 // TOP BAR
                 // ==================================================
 
                 AchievementTopBar(
-                  stars: achievementProvider.totalStars,
+                  stars:
+                      achievementProvider.totalStars,
                   onBack: () {
                     Navigator.maybePop(context);
                   },
                 ),
 
                 // ==================================================
-                // SCROLL CONTENT
+                // LOADING
                 // ==================================================
 
-                Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.only(
-                      top: 4,
-                      bottom: 25,
+                if (achievementProvider.isLoading)
+                  const Expanded(
+                    child: Center(
+                      child:
+                          CircularProgressIndicator(
+                        color:
+                            Color(0xFF6938EF),
+                      ),
                     ),
-                    children: [
-                      // ==================================================
-                      // HERO BANNER
-                      // ==================================================
+                  )
 
-                      const AchievementHeroBanner(),
+                // ==================================================
+                // CONTENT
+                // ==================================================
 
-                      // ==================================================
-                      // OVERALL PROGRESS
-                      // ==================================================
-
-                      OverallProgressCard(
-                        completed:
-                            achievementProvider
-                                .completedAchievements,
-                        total:
-                            achievementProvider
-                                .totalAchievements,
-                        stars:
-                            achievementProvider.totalStars,
+                else
+                  Expanded(
+                    child: ListView(
+                      padding:
+                          const EdgeInsets.only(
+                        top: 4,
+                        bottom: 25,
                       ),
+                      children: [
 
-                      const SizedBox(height: 14),
+                        // ==================================================
+                        // HERO BANNER
+                        // ==================================================
 
-                      // ==================================================
-                      // NEXT REWARD
-                      // ==================================================
+                        const AchievementHeroBanner(),
 
-                      NextRewardCard(
-                        completedBooks:
-                            achievementProvider.completedBooks,
-                      ),
+                        // ==================================================
+                        // OVERALL PROGRESS
+                        // ==================================================
 
-                      // ==================================================
-                      // CATEGORY FILTER
-                      // ==================================================
+                        OverallProgressCard(
+                          completed:
+                              achievementProvider
+                                  .completedAchievements,
+                          total:
+                              achievementProvider
+                                  .totalAchievements,
+                          stars:
+                              achievementProvider
+                                  .totalStars,
+                        ),
 
-                      AchievementCategoryTabs(
-                        selectedCategory:
-                            _selectedCategory,
-                        onCategoryChanged: (category) {
-                          setState(() {
-                            _selectedCategory = category;
-                          });
-                        },
-                      ),
+                        const SizedBox(
+                          height: 14,
+                        ),
 
-                      const SizedBox(height: 12),
+                        // ==================================================
+                        // NEXT REWARD
+                        // ==================================================
 
-                      // ==================================================
-                      // ACHIEVEMENT LIST
-                      // ==================================================
+                        NextRewardCard(
+                          completedBooks:
+                              achievementProvider
+                                  .completedBooks,
+                        ),
 
-                      if (achievements.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.all(40),
-                          child: Center(
+                        // ==================================================
+                        // CATEGORY FILTER
+                        // ==================================================
+
+                        AchievementCategoryTabs(
+                          selectedCategory:
+                              _selectedCategory,
+                          onCategoryChanged:
+                              (category) {
+                            setState(() {
+                              _selectedCategory =
+                                  category;
+                            });
+                          },
+                        ),
+
+                        const SizedBox(
+                          height: 12,
+                        ),
+
+                        // ==================================================
+                        // ERROR
+                        // ==================================================
+
+                        if (achievementProvider
+                                .errorMessage !=
+                            null)
+                          Padding(
+                            padding:
+                                const EdgeInsets
+                                    .symmetric(
+                              horizontal: 20,
+                              vertical: 15,
+                            ),
                             child: Text(
-                              'No achievements found.',
-                              style: TextStyle(
-                                color: Color(0xFF666B82),
-                                fontSize: 14,
+                              achievementProvider
+                                  .errorMessage!,
+                              textAlign:
+                                  TextAlign.center,
+                              style:
+                                  const TextStyle(
+                                color:
+                                    Colors.red,
+                                fontSize: 13,
                               ),
                             ),
                           ),
-                        )
-                      else
-                        ...achievements.map(
-                          (achievement) {
-                            return AchievementCard(
-                              achievement: achievement,
-                            );
-                          },
-                        ),
-                    ],
+
+                        // ==================================================
+                        // ACHIEVEMENT LIST
+                        // ==================================================
+
+                        if (achievements.isEmpty)
+                          const Padding(
+                            padding:
+                                EdgeInsets.all(40),
+                            child: Center(
+                              child: Text(
+                                'No achievements found.',
+                                style:
+                                    TextStyle(
+                                  color:
+                                      Color(
+                                    0xFF666B82,
+                                  ),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          ...achievements.map(
+                            (achievement) {
+                              return AchievementCard(
+                                achievement:
+                                    achievement,
+                              );
+                            },
+                          ),
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           ),

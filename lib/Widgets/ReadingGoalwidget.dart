@@ -1,38 +1,11 @@
 // lib/Widgets/ReadingGoalsWidgets.dart
 // ignore_for_file: deprecated_member_use, prefer_const_constructors
 
+import 'package:bookverse/Models/ReadingGoalsModel.dart';
 import 'package:flutter/material.dart';
 
 const goalsPurple = Color(0xFF6C4CE0);
 const goalsIndigo = Color(0xFF4A3AAE);
-
-// ============================================================
-// Data models - shape these to match whatever the backend will
-// eventually return, so wiring it up later is just swapping the
-// data source, not rewriting these widgets.
-// ============================================================
-class DayReading {
-  final String label; // 'Mon', 'Tue', ...
-  final int minutes; // real minutes read that day
-  const DayReading(this.label, this.minutes);
-}
-
-class ReadingChallenge {
-  final String title;
-  final String subtitle;
-  final int current;
-  final int target;
-  final bool completed;
-  final Color accentColor;
-  const ReadingChallenge({
-    required this.title,
-    required this.subtitle,
-    required this.current,
-    required this.target,
-    this.completed = false,
-    this.accentColor = goalsPurple,
-  });
-}
 
 // ============================================================
 // 1) Header card - circular progress + motivational text
@@ -455,7 +428,7 @@ class ReadingChallengesCard extends StatelessWidget {
             children: [
               for (int i = 0; i < challenges.length; i++) ...[
                 if (i != 0) const SizedBox(width: 10),
-                Expanded(child: _challengeTile(challenges[i])),
+                Expanded(child: _challengeTile(challenges[i], i)),
               ],
             ],
           ),
@@ -464,11 +437,24 @@ class ReadingChallengesCard extends StatelessWidget {
     );
   }
 
-  Widget _challengeTile(ReadingChallenge c) {
+  Color _challengeColor(int index) {
+    const palette = [
+      goalsPurple,
+      goalsIndigo,
+      Color(0xFF2E7D32),
+      Color(0xFFE8A93B),
+      Color(0xFF00A9A5),
+    ];
+
+    return palette[index % palette.length];
+  }
+
+  Widget _challengeTile(ReadingChallenge c, int index) {
+    final accentColor = _challengeColor(index);
     final progress = c.target == 0 ? 0.0 : (c.current / c.target).clamp(0.0, 1.0);
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: c.accentColor.withOpacity(0.08), borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: accentColor.withOpacity(0.08), borderRadius: BorderRadius.circular(14)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -480,7 +466,7 @@ class ReadingChallengesCard extends StatelessWidget {
               child: const Icon(Icons.check_rounded, color: Colors.white, size: 15),
             )
           else
-            Icon(Icons.menu_book_rounded, color: c.accentColor, size: 18),
+            Icon(Icons.menu_book_rounded, color: accentColor, size: 18),
           const SizedBox(height: 8),
           Text(c.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5, color: Colors.black87)),
           const SizedBox(height: 2),
@@ -494,7 +480,7 @@ class ReadingChallengesCard extends StatelessWidget {
                 value: progress,
                 minHeight: 5,
                 backgroundColor: Colors.grey.shade200,
-                valueColor: AlwaysStoppedAnimation(c.accentColor),
+                valueColor: AlwaysStoppedAnimation(accentColor),
               ),
             ),
             const SizedBox(height: 4),

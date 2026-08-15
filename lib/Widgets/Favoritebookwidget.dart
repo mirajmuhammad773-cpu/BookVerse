@@ -1,4 +1,7 @@
+// ignore_for_file: unused_import
+
 import 'package:bookverse/Views/ReaderScreen.dart';
+import 'package:bookverse/Widgets/Readerpagewidget.dart' hide BookPageData;
 import 'package:flutter/material.dart';
 
 
