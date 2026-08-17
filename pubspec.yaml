@@ -25,6 +25,11 @@ dependencies:
   # Typography
   google_fonts: 
 
+  # local storage 
+  path_provider: 
+  permission_handler: 
+  path: 
+
    
 
   

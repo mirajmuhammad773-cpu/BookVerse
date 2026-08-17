@@ -1,5 +1,5 @@
 // lib/Widgets/FeaturedBookCarousel.dart
-// ignore_for_file: prefer_const_constructors, unused_element_parameter
+// ignore_for_file: deprecated_member_use, prefer_const_constructors, unused_element_parameter
 
 import 'dart:async';
 
@@ -104,7 +104,7 @@ class _FeaturedBookCarouselState extends State<FeaturedBookCarousel> {
               final book = widget.books[i % widget.books.length];
               return _BookCard(
                 book: book,
-                onReadNow: () => widget.onReadNow?.call(book),
+                
               );
             },
           ),
@@ -134,8 +134,7 @@ class _FeaturedBookCarouselState extends State<FeaturedBookCarousel> {
 
 class _BookCard extends StatelessWidget {
   final FeaturedBook book;
-  final VoidCallback? onReadNow;
-  const _BookCard({required this.book, this.onReadNow});
+  const _BookCard({required this.book,});
 
   @override
   Widget build(BuildContext context) {
@@ -170,27 +169,7 @@ class _BookCard extends StatelessWidget {
                       Text('(${book.ratingCount})', style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 11)),
                     ]),
                     const SizedBox(height: 18),
-                    ElevatedButton(
-                      onPressed: () {
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) => BookDetailsScreen(),
-    //   ),
-    // );
-  },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: book.themeColors.first,
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                      ),
-                      child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                        Text('Read Now', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                        SizedBox(width: 4),
-                        Icon(Icons.arrow_forward_rounded, size: 15),
-                      ]),
-                    ),
+                 
                   ],
                 ),
               ),

@@ -14,15 +14,14 @@ class UserRepository {
   final FirebaseFirestore _firestore =
       FirebaseFirestore.instance;
 
-  // Latest google_sign_in API
   final GoogleSignIn _googleSignIn =
       GoogleSignIn.instance;
+
+  bool _googleInitialized = false;
 
   // ============================================================
   // GOOGLE SIGN-IN INITIALIZATION
   // ============================================================
-
-  bool _googleInitialized = false;
 
   Future<void> _initializeGoogleSignIn() async {
     if (_googleInitialized) {
@@ -35,7 +34,7 @@ class UserRepository {
   }
 
   // ============================================================
-  // CURRENT USER
+  // CURRENT FIREBASE USER
   // ============================================================
 
   User? get currentFirebaseUser {
@@ -78,10 +77,11 @@ class UserRepository {
       final User? firebaseUser = credential.user;
 
       if (firebaseUser == null) {
-        throw Exception('Unable to create user.');
+        throw Exception(
+          'Unable to create user.',
+        );
       }
 
-      // Update Firebase Auth display name
       await firebaseUser.updateDisplayName(
         name.trim(),
       );
@@ -90,12 +90,11 @@ class UserRepository {
         uid: firebaseUser.uid,
         name: name.trim(),
         email: email.trim(),
-        password: password,
+        password: '',
         createdAt: DateTime.now(),
       );
 
-      // IMPORTANT:
-      // Password should NOT be stored in Firestore.
+      // Password is NOT stored in Firestore.
       await _usersCollection
           .doc(firebaseUser.uid)
           .set(
@@ -137,7 +136,6 @@ class UserRepository {
 
       return await getUserById(
         firebaseUser.uid,
-        password: password,
       );
     } on FirebaseAuthException catch (e) {
       throw Exception(
@@ -152,19 +150,16 @@ class UserRepository {
 
   Future<UserModel> signInWithGoogle() async {
     try {
-      // Latest google_sign_in requires initialization
       await _initializeGoogleSignIn();
 
-      // Latest API:
-      // signIn() -> authenticate()
       final GoogleSignInAccount googleUser =
           await _googleSignIn.authenticate();
 
-      // Latest GoogleSignInAuthentication contains idToken
       final GoogleSignInAuthentication googleAuth =
           googleUser.authentication;
 
-      final String? idToken = googleAuth.idToken;
+      final String? idToken =
+          googleAuth.idToken;
 
       if (idToken == null) {
         throw Exception(
@@ -172,13 +167,11 @@ class UserRepository {
         );
       }
 
-      // Firebase Google credential
       final AuthCredential credential =
           GoogleAuthProvider.credential(
         idToken: idToken,
       );
 
-      // Sign in to Firebase
       final UserCredential userCredential =
           await _auth.signInWithCredential(
         credential,
@@ -193,27 +186,19 @@ class UserRepository {
         );
       }
 
-      // ========================================================
-      // CHECK FIRESTORE USER
-      // ========================================================
-
       final DocumentSnapshot<
-          Map<String, dynamic>> existingUser =
+              Map<String, dynamic>>
+          existingUser =
           await _usersCollection
               .doc(firebaseUser.uid)
               .get();
 
-      // User already exists
       if (existingUser.exists &&
           existingUser.data() != null) {
         return UserModel.fromMap(
           existingUser.data()!,
         );
       }
-
-      // ========================================================
-      // CREATE NEW GOOGLE USER
-      // ========================================================
 
       final UserModel user = UserModel(
         uid: firebaseUser.uid,
@@ -223,7 +208,6 @@ class UserRepository {
         createdAt: DateTime.now(),
       );
 
-      // Password is NOT stored.
       await _usersCollection
           .doc(firebaseUser.uid)
           .set(
@@ -233,7 +217,8 @@ class UserRepository {
       return user;
     } on GoogleSignInException catch (e) {
       throw Exception(
-        'Google Sign-In failed: ${e.description ?? e.code.name}',
+        'Google Sign-In failed: '
+        '${e.description ?? e.code.name}',
       );
     } on FirebaseAuthException catch (e) {
       throw Exception(
@@ -249,11 +234,11 @@ class UserRepository {
   // ============================================================
 
   Future<UserModel> getUserById(
-    String uid, {
-    String password = '',
-  }) async {
+    String uid,
+  ) async {
     final DocumentSnapshot<
-        Map<String, dynamic>> document =
+            Map<String, dynamic>>
+        document =
         await _usersCollection
             .doc(uid)
             .get();
@@ -265,13 +250,8 @@ class UserRepository {
       );
     }
 
-    final UserModel user =
-        UserModel.fromMap(
+    return UserModel.fromMap(
       document.data()!,
-    );
-
-    return user.copyWith(
-      password: password,
     );
   }
 
@@ -297,7 +277,7 @@ class UserRepository {
   }
 
   // ============================================================
-  // UPDATE USER
+  // UPDATE USER PROFILE
   // ============================================================
 
   Future<void> updateUser({
@@ -307,11 +287,13 @@ class UserRepository {
   }) async {
     final Map<String, dynamic> data = {};
 
-    if (name != null) {
+    if (name != null &&
+        name.trim().isNotEmpty) {
       data['name'] = name.trim();
     }
 
-    if (email != null) {
+    if (email != null &&
+        email.trim().isNotEmpty) {
       data['email'] = email.trim();
     }
 
@@ -319,19 +301,118 @@ class UserRepository {
       return;
     }
 
-    // Update Firestore
     await _usersCollection
         .doc(uid)
         .update(data);
 
-    // Update Firebase Auth display name
     final User? firebaseUser =
         _auth.currentUser;
 
-    if (firebaseUser != null &&
-        name != null) {
+    if (firebaseUser == null) {
+      return;
+    }
+
+    if (name != null &&
+        name.trim().isNotEmpty) {
       await firebaseUser.updateDisplayName(
         name.trim(),
+      );
+    }
+
+    if (email != null &&
+        email.trim().isNotEmpty &&
+        email.trim() != firebaseUser.email) {
+      await firebaseUser.verifyBeforeUpdateEmail(
+        email.trim(),
+      );
+    }
+  }
+
+  // ============================================================
+  // CHANGE PASSWORD
+  // ============================================================
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final User? user = _auth.currentUser;
+
+    if (user == null) {
+      throw Exception(
+        'No logged-in user found.',
+      );
+    }
+
+    // ----------------------------------------------------------
+    // CHECK PASSWORD LOGIN PROVIDER
+    // ----------------------------------------------------------
+
+    final bool hasPasswordProvider =
+        user.providerData.any(
+      (provider) =>
+          provider.providerId == 'password',
+    );
+
+    if (!hasPasswordProvider) {
+      throw Exception(
+        'Password cannot be changed for this Google account.',
+      );
+    }
+
+    final String? email = user.email;
+
+    if (email == null ||
+        email.trim().isEmpty) {
+      throw Exception(
+        'User email not found.',
+      );
+    }
+
+    // ----------------------------------------------------------
+    // CURRENT PASSWORD REQUIRED
+    // ----------------------------------------------------------
+
+    if (currentPassword.trim().isEmpty) {
+      throw Exception(
+        'Please enter your current password.',
+      );
+    }
+
+    // ----------------------------------------------------------
+    // RE-AUTHENTICATE USER
+    // ----------------------------------------------------------
+
+    try {
+      final AuthCredential credential =
+          EmailAuthProvider.credential(
+        email: email,
+        password: currentPassword,
+      );
+
+      await user.reauthenticateWithCredential(
+        credential,
+      );
+    } on FirebaseAuthException catch (e) {
+      throw Exception(
+        _handleAuthException(e),
+      );
+    }
+
+    // ----------------------------------------------------------
+    // UPDATE FIREBASE AUTH PASSWORD
+    // ----------------------------------------------------------
+
+    try {
+      await user.updatePassword(
+        newPassword,
+      );
+
+      // Force Firebase user state refresh.
+      await user.reload();
+    } on FirebaseAuthException catch (e) {
+      throw Exception(
+        _handleAuthException(e),
       );
     }
   }
@@ -346,7 +427,7 @@ class UserRepository {
 
       await _googleSignIn.signOut();
     } catch (_) {
-      // Continue Firebase logout
+      // Continue with Firebase logout.
     }
 
     await _auth.signOut();
@@ -364,22 +445,25 @@ class UserRepository {
       return;
     }
 
-    // Delete Firestore user
     await _usersCollection
         .doc(user.uid)
         .delete();
 
-    // Google logout
     try {
       await _initializeGoogleSignIn();
 
       await _googleSignIn.disconnect();
     } catch (_) {
-      // Ignore Google disconnect errors
+      // Ignore Google disconnect errors.
     }
 
-    // Delete Firebase Auth account
-    await user.delete();
+    try {
+      await user.delete();
+    } on FirebaseAuthException catch (e) {
+      throw Exception(
+        _handleAuthException(e),
+      );
+    }
   }
 
   // ============================================================
@@ -403,8 +487,13 @@ class UserRepository {
         return 'No account found with this email.';
 
       case 'wrong-password':
+        return 'Current password is incorrect.';
+
       case 'invalid-credential':
-        return 'Invalid email or password.';
+        return 'Current password is incorrect.';
+
+      case 'requires-recent-login':
+        return 'Please login again before changing your password.';
 
       case 'user-disabled':
         return 'This account has been disabled.';
@@ -417,6 +506,12 @@ class UserRepository {
 
       case 'operation-not-allowed':
         return 'This sign-in method is not enabled.';
+
+      case 'provider-already-linked':
+        return 'This account is already linked.';
+
+      case 'credential-already-in-use':
+        return 'This credential is already in use.';
 
       default:
         return e.message ??

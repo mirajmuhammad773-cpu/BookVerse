@@ -1,8 +1,11 @@
 import 'package:bookverse/Repository/Book-Repository.dart';
-import 'package:bookverse/Repository/Favoritebookprovider.dart';
+import 'package:bookverse/Repository/FavoritebookRepository.dart';
 import 'package:bookverse/ViewModels/AchievementProvider.dart';
 import 'package:bookverse/ViewModels/Book-view-model.dart';
+import 'package:bookverse/ViewModels/BookDownloadProvider.dart';
+import 'package:bookverse/ViewModels/FavoriteBookProvider.dart';
 import 'package:bookverse/ViewModels/ReadingGoalProvider.dart';
+import 'package:bookverse/ViewModels/ReadingHistoryProvider.dart';
 import 'package:bookverse/ViewModels/UserProvider.dart';
 import 'package:bookverse/Views/SplashScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -17,8 +20,18 @@ void main() async{
       providers: [
 
          ChangeNotifierProvider(
-      create: (_) => ReadingGoalProvider(),
-    ),
+          create: (_) => DownloadProvider(),
+        ),
+
+      
+        ChangeNotifierProvider(
+          create: (_) =>
+          ReadingHistoryProvider(),
+       ),
+
+       ChangeNotifierProvider(
+          create: (_) => ReadingGoalProvider(),
+       ),
 
          ChangeNotifierProvider<UserProvider>(
           create: (_) => UserProvider(),
@@ -43,9 +56,9 @@ void main() async{
         // FAVOURITE BOOKS PROVIDER
         // ======================================================
 
-        ChangeNotifierProvider(
-          create: (_) => FavouriteBooksProvider(),
-        ),
+          ChangeNotifierProvider(
+           create: (_) => FavouriteBooksProvider(),
+          ),
       ],
 
       child: const MyApp(),

@@ -1,5 +1,7 @@
 // lib/Widgets/SigninWidget.dart
 
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class SigninInputField extends StatelessWidget {

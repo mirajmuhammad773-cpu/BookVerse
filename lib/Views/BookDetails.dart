@@ -1,5 +1,5 @@
 
-// ignore_for_file: unused_field
+// ignore_for_file: deprecated_member_use, unused_field
 
 import 'package:bookverse/Models/BookModel.dart';
 import 'package:bookverse/Views/ReaderScreen.dart';

@@ -321,17 +321,6 @@ class ReadingGoalProvider extends ChangeNotifier {
       return;
     }
 
-    // ----------------------------------------------------------
-    // Get provider's actual session duration.
-    //
-    // ReaderScreen also sends its calculated minutes.
-    // We use BOTH values and take the larger one.
-    //
-    // This protects against cases where ReaderScreen lifecycle
-    // callbacks and Provider timing don't finish at exactly
-    // the same moment.
-    // ----------------------------------------------------------
-
     int actualMinutes = minutes;
 
     final startTime =
@@ -373,17 +362,7 @@ class ReadingGoalProvider extends ChangeNotifier {
         return;
       }
 
-      // --------------------------------------------------------
-      // ADD COMPLETE SESSION.
-      //
-      // Example:
-      //
-      // Session 1 = 5 min
-      // Session 2 = 2 min
-      // Session 3 = 10 min
-      //
-      // Total = 17 min
-      // --------------------------------------------------------
+     
 
       await addReadingTime(
         actualMinutes,

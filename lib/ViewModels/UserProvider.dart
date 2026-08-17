@@ -7,6 +7,10 @@ class UserProvider extends ChangeNotifier {
   final UserRepository _repository =
       UserRepository();
 
+  // ============================================================
+  // STATE
+  // ============================================================
+
   UserModel? _user;
 
   bool _isLoading = false;
@@ -14,6 +18,10 @@ class UserProvider extends ChangeNotifier {
   bool _isInitialized = false;
 
   String? _errorMessage;
+
+  // ============================================================
+  // GETTERS
+  // ============================================================
 
   UserModel? get user => _user;
 
@@ -35,10 +43,18 @@ class UserProvider extends ChangeNotifier {
   String get userEmail =>
       _user?.email ?? '';
 
+  // ============================================================
+  // CLEAR ERROR
+  // ============================================================
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
+
+  // ============================================================
+  // LOADING
+  // ============================================================
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -60,8 +76,9 @@ class UserProvider extends ChangeNotifier {
 
       _isInitialized = true;
     } catch (e) {
-      _errorMessage =
-          e.toString().replaceFirst(
+      _errorMessage = e
+          .toString()
+          .replaceFirst(
             'Exception: ',
             '',
           );
@@ -95,8 +112,9 @@ class UserProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _errorMessage =
-          e.toString().replaceFirst(
+      _errorMessage = e
+          .toString()
+          .replaceFirst(
             'Exception: ',
             '',
           );
@@ -108,7 +126,7 @@ class UserProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // EMAIL LOGIN
+  // LOGIN
   // ============================================================
 
   Future<bool> login({
@@ -128,8 +146,9 @@ class UserProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _errorMessage =
-          e.toString().replaceFirst(
+      _errorMessage = e
+          .toString()
+          .replaceFirst(
             'Exception: ',
             '',
           );
@@ -155,8 +174,9 @@ class UserProvider extends ChangeNotifier {
 
       return true;
     } catch (e) {
-      _errorMessage =
-          e.toString().replaceFirst(
+      _errorMessage = e
+          .toString()
+          .replaceFirst(
             'Exception: ',
             '',
           );
@@ -176,6 +196,11 @@ class UserProvider extends ChangeNotifier {
     String? email,
   }) async {
     if (_user == null) {
+      _errorMessage =
+          'No logged-in user found.';
+
+      notifyListeners();
+
       return false;
     }
 
@@ -191,14 +216,48 @@ class UserProvider extends ChangeNotifier {
       );
 
       _user = _user!.copyWith(
-        name: name,
-        email: email,
+        name: name ?? _user!.name,
+        email: email ?? _user!.email,
       );
 
       return true;
     } catch (e) {
-      _errorMessage =
-          e.toString().replaceFirst(
+      _errorMessage = e
+          .toString()
+          .replaceFirst(
+            'Exception: ',
+            '',
+          );
+
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // ============================================================
+  // CHANGE PASSWORD
+  // ============================================================
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _setLoading(true);
+
+    _errorMessage = null;
+
+    try {
+      await _repository.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+
+      return true;
+    } catch (e) {
+      _errorMessage = e
+          .toString()
+          .replaceFirst(
             'Exception: ',
             '',
           );
@@ -213,20 +272,27 @@ class UserProvider extends ChangeNotifier {
   // LOGOUT
   // ============================================================
 
-  Future<void> logout() async {
+  Future<bool> logout() async {
     _setLoading(true);
+
+    _errorMessage = null;
 
     try {
       await _repository.logout();
 
       _user = null;
-      _errorMessage = null;
+      _isInitialized = true;
+
+      return true;
     } catch (e) {
-      _errorMessage =
-          e.toString().replaceFirst(
+      _errorMessage = e
+          .toString()
+          .replaceFirst(
             'Exception: ',
             '',
           );
+
+      return false;
     } finally {
       _setLoading(false);
     }
@@ -245,11 +311,13 @@ class UserProvider extends ChangeNotifier {
       await _repository.deleteAccount();
 
       _user = null;
+      _isInitialized = true;
 
       return true;
     } catch (e) {
-      _errorMessage =
-          e.toString().replaceFirst(
+      _errorMessage = e
+          .toString()
+          .replaceFirst(
             'Exception: ',
             '',
           );
