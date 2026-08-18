@@ -235,12 +235,12 @@ class DownloadProvider
 
   Future<DownloadModel?>
       getDownloadedBook(
-    String bookId,
+    String title,
   ) async {
     try {
       return await _repository
           .getDownloadedBook(
-        bookId,
+        title,
       );
     } catch (e) {
       debugPrint(

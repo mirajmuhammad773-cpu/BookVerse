@@ -29,6 +29,9 @@ dependencies:
   path_provider: 
   permission_handler: 
   path: 
+  external_path:
+  flutter_stripe: 
+  cloud_functions:
 
    
 

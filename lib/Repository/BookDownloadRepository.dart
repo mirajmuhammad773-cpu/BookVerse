@@ -8,7 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart' as path;
-import 'package:path_provider/path_provider.dart';
+import 'package:external_path/external_path.dart';
 
 class DownloadRepository {
   // ============================================================
@@ -54,10 +54,10 @@ class DownloadRepository {
   // ============================================================
 
   Future<bool> isBookDownloaded(
-    String bookId,
+    String title,
   ) async {
     final doc = await _downloadsCollection
-        .doc(bookId)
+        .doc(title)
         .get();
 
     if (!doc.exists) {
@@ -117,7 +117,7 @@ class DownloadRepository {
   }
 
   // ============================================================
-  // DOWNLOAD BOOK TO LOCAL STORAGE
+  // DOWNLOAD BOOK TO PUBLIC DOWNLOAD STORAGE
   // ============================================================
 
   Future<DownloadModel> downloadBook({
@@ -141,18 +141,24 @@ class DownloadRepository {
     }
 
     // ----------------------------------------------------------
-    // DOWNLOAD DIRECTORY
+    // PUBLIC DOWNLOAD DIRECTORY
     // ----------------------------------------------------------
 
-    final directory =
-        await getApplicationDocumentsDirectory();
+    final downloadDirectory =
+        await ExternalPath
+            .getExternalStoragePublicDirectory(
+      ExternalPath.DIRECTORY_DOWNLOAD,
+    );
+
+    // ----------------------------------------------------------
+    // BOOKVERSE DIRECTORY
+    // ----------------------------------------------------------
 
     final booksDirectory =
         Directory(
       path.join(
-        directory.path,
+        downloadDirectory,
         'BookVerse',
-        'Books',
       ),
     );
 
@@ -201,6 +207,10 @@ class DownloadRepository {
     final response =
         await request.send();
 
+    // ----------------------------------------------------------
+    // CHECK RESPONSE
+    // ----------------------------------------------------------
+
     if (response.statusCode != 200) {
       throw Exception(
         'Download failed. Status: ${response.statusCode}',
@@ -224,8 +234,10 @@ class DownloadRepository {
         file.openWrite();
 
     try {
-      await for (final chunk
-          in response.stream) {
+      await for (
+        final chunk
+        in response.stream
+      ) {
         received +=
             chunk.length;
 
@@ -238,7 +250,6 @@ class DownloadRepository {
       }
     } finally {
       await sink.flush();
-
       await sink.close();
     }
 
@@ -255,8 +266,14 @@ class DownloadRepository {
     final fileSize =
         await file.length();
 
+    if (fileSize <= 0) {
+      throw Exception(
+        'Downloaded file is empty.',
+      );
+    }
+
     // ----------------------------------------------------------
-    // CREATE MODEL
+    // CREATE DOWNLOAD MODEL
     // ----------------------------------------------------------
 
     return DownloadModel(
@@ -410,7 +427,7 @@ class DownloadRepository {
   }
 
   // ============================================================
-  // GET LOCAL FILE
+  // GET LOCAL BOOK FILE
   // ============================================================
 
   Future<File?> getLocalBookFile(
@@ -451,6 +468,10 @@ class DownloadRepository {
       name = 'book';
     }
 
+    // ----------------------------------------------------------
+    // REMOVE INVALID FILE NAME CHARACTERS
+    // ----------------------------------------------------------
+
     name = name.replaceAll(
       RegExp(
         r'[<>:"/\\|?*]',
@@ -458,12 +479,20 @@ class DownloadRepository {
       '_',
     );
 
+    // ----------------------------------------------------------
+    // REPLACE MULTIPLE SPACES
+    // ----------------------------------------------------------
+
     name = name.replaceAll(
       RegExp(
         r'\s+',
       ),
       '_',
     );
+
+    // ----------------------------------------------------------
+    // LIMIT FILE NAME LENGTH
+    // ----------------------------------------------------------
 
     if (name.length > 80) {
       name =
