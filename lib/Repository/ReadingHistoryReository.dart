@@ -27,11 +27,32 @@ class ReadingHistoryRepository {
   // ============================================================
 
   CollectionReference<Map<String, dynamic>>
-      _historyCollection(String userId) {
+      _historyCollection(
+    String userId,
+  ) {
     return _firestore
         .collection('users')
         .doc(userId)
         .collection('readingHistory');
+  }
+
+  // ============================================================
+  // DOCUMENT ID
+  // ============================================================
+  //
+  // IMPORTANT:
+  //
+  // Use bookId instead of title.
+  //
+  // Book title can theoretically be changed or duplicated.
+  // Book ID is stable and unique.
+  //
+  // ============================================================
+
+  String _documentId(
+    ReadingHistoryModel history,
+  ) {
+    return history.bookId;
   }
 
   // ============================================================
@@ -50,10 +71,14 @@ class ReadingHistoryRepository {
     }
 
     await _historyCollection(userId)
-        .doc(history.title)
+        .doc(
+          _documentId(history),
+        )
         .set(
           history.toMap(),
-          SetOptions(merge: true),
+          SetOptions(
+            merge: true,
+          ),
         );
   }
 
@@ -78,11 +103,13 @@ class ReadingHistoryRepository {
             .limit(50)
             .get();
 
-    return snapshot.docs.map((doc) {
-      return ReadingHistoryModel.fromMap(
-        doc.data(),
-      );
-    }).toList();
+    return snapshot.docs.map(
+      (doc) {
+        return ReadingHistoryModel.fromMap(
+          doc.data(),
+        );
+      },
+    ).toList();
   }
 
   // ============================================================
@@ -91,7 +118,7 @@ class ReadingHistoryRepository {
 
   Future<ReadingHistoryModel?>
       getBookHistory(
-    String title,
+    String bookId,
   ) async {
     final userId = _userId;
 
@@ -101,10 +128,11 @@ class ReadingHistoryRepository {
 
     final doc =
         await _historyCollection(userId)
-            .doc(title)
+            .doc(bookId)
             .get();
 
-    if (!doc.exists || doc.data() == null) {
+    if (!doc.exists ||
+        doc.data() == null) {
       return null;
     }
 
@@ -118,7 +146,7 @@ class ReadingHistoryRepository {
   // ============================================================
 
   Future<void> deleteReadingHistory(
-    String title,
+    String bookId,
   ) async {
     final userId = _userId;
 
@@ -127,7 +155,7 @@ class ReadingHistoryRepository {
     }
 
     await _historyCollection(userId)
-        .doc(title)
+        .doc(bookId)
         .delete();
   }
 
@@ -146,10 +174,18 @@ class ReadingHistoryRepository {
         await _historyCollection(userId)
             .get();
 
-    final batch = _firestore.batch();
+    if (snapshot.docs.isEmpty) {
+      return;
+    }
 
-    for (final doc in snapshot.docs) {
-      batch.delete(doc.reference);
+    final batch =
+        _firestore.batch();
+
+    for (final doc
+        in snapshot.docs) {
+      batch.delete(
+        doc.reference,
+      );
     }
 
     await batch.commit();

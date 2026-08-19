@@ -8,97 +8,10 @@ class ChoosePlanScreen extends StatefulWidget {
   const ChoosePlanScreen({super.key});
 
   @override
-  State<ChoosePlanScreen> createState() =>
-      _ChoosePlanScreenState();
+  State<ChoosePlanScreen> createState() => _ChoosePlanScreenState();
 }
 
-class _ChoosePlanScreenState
-    extends State<ChoosePlanScreen> {
-
-  // ============================================================
-  // MONTHLY PLANS
-  // ============================================================
-
-  static const _monthlyPlans = [
-    PlanData(
-      name: 'Free',
-      price: '\$0',
-      period: '/ month',
-      features: [
-        '1 Books / Month',
-        'Standard Quality',
-        'Basic Support',
-      ],
-    ),
-
-    PlanData(
-      name: 'Premium',
-      price: '\$4.99',
-      period: '/ month',
-      isPopular: true,
-      features: [
-        'Unlimited Books',
-        'High Quality',
-        'Offline Reading',
-        'Priority Support',
-      ],
-    ),
-
-    PlanData(
-      name: 'Pro',
-      price: '\$9.99',
-      period: '/ month',
-      features: [
-        'Everything in Premium',
-        'Audiobooks',
-        'Cloud Sync',
-        'Early Access',
-      ],
-    ),
-  ];
-
-  // ============================================================
-  // YEARLY PLANS
-  // ============================================================
-
-  static const _yearlyPlans = [
-    PlanData(
-      name: 'Free',
-      price: '\$0',
-      period: '/ year',
-      features: [
-        '5 Books / Month',
-        'Standard Quality',
-        'Basic Support',
-      ],
-    ),
-
-    PlanData(
-      name: 'Premium',
-      price: '\$47.99',
-      period: '/ year',
-      isPopular: true,
-      features: [
-        'Unlimited Books',
-        'High Quality',
-        'Offline Reading',
-        'Priority Support',
-      ],
-    ),
-
-    PlanData(
-      name: 'Pro',
-      price: '\$95.99',
-      period: '/ year',
-      features: [
-        'Everything in Premium',
-        'Audiobooks',
-        'Cloud Sync',
-        'Early Access',
-      ],
-    ),
-  ];
-
+class _ChoosePlanScreenState extends State<ChoosePlanScreen> {
   // ============================================================
   // BUILD
   // ============================================================
@@ -106,215 +19,125 @@ class _ChoosePlanScreenState
   @override
   Widget build(BuildContext context) {
     return Consumer<PlanProvider>(
-      builder: (
-        context,
-        provider,
-        child,
-      ) {
-        final currentPlans =
-            provider.isMonthly
-                ? _monthlyPlans
-                : _yearlyPlans;
+      builder: (context, provider, child) {
+        // ------------------------------------------------------
+        // PlanProvider.plans (single source of truth) se
+        // display list banate hain — ab koi duplicate data nahi.
+        // ------------------------------------------------------
+        final currentPlans = PlanProvider.plans.map((plan) {
+          final price = provider.isMonthly ? plan.monthlyPrice : plan.yearlyPrice;
+          final features = provider.isMonthly ? plan.monthlyFeatures : plan.yearlyFeatures;
+
+          return PlanData(
+            name: plan.name,
+            price: '\$${price.toStringAsFixed(2)}',
+            period: provider.isMonthly ? '/ month' : '/ year',
+            features: features,
+            isPopular: plan.isPopular,
+          );
+        }).toList();
 
         return Scaffold(
           backgroundColor: Colors.white,
-
           body: SafeArea(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(
-                horizontal: 20,
-              ),
-
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   // ==================================================
                   // HEADER
                   // ==================================================
-
                   const Text(
                     'Choose Your Plan',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight:
-                          FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
-
                   const SizedBox(height: 4),
-
                   const Text(
                     'Unlock unlimited stories',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      color: Colors.grey,
-                    ),
+                    style: TextStyle(fontSize: 13.5, color: Colors.grey),
                   ),
-
                   const SizedBox(height: 20),
 
                   // ==================================================
                   // MONTHLY / YEARLY TOGGLE
                   // ==================================================
-
                   Container(
-                    padding:
-                        const EdgeInsets.all(4),
-
-                    decoration:
-                        BoxDecoration(
-                      color:
-                          const Color(
-                        0xFFF1F1F5,
-                      ),
-
-                      borderRadius:
-                          BorderRadius.circular(
-                        30,
-                      ),
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F1F5),
+                      borderRadius: BorderRadius.circular(30),
                     ),
-
                     child: Row(
                       children: [
-
                         Expanded(
-                          child: _cycleTab(
-                            label: 'Monthly',
-                            index: 0,
-                            provider:
-                                provider,
-                          ),
+                          child: _cycleTab(label: 'Monthly', index: 0, provider: provider),
                         ),
-
                         Expanded(
                           child: _cycleTab(
                             label: 'Yearly',
-                            suffix:
-                                '(save 20%)',
+                            suffix: '(save 20%)',
                             index: 1,
-                            provider:
-                                provider,
+                            provider: provider,
                           ),
                         ),
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 20),
 
                   // ==================================================
                   // PLANS
                   // ==================================================
-
                   Expanded(
-                    child:
-                        ListView.separated(
-                      itemCount:
-                          currentPlans.length,
-
-                      separatorBuilder:
-                          (_, __) =>
-                              const SizedBox(
-                        height: 14,
-                      ),
-
-                      itemBuilder:
-                          (context, index) {
-
-                        final plan =
-                            currentPlans[index];
+                    child: ListView.separated(
+                      itemCount: currentPlans.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 14),
+                      itemBuilder: (context, index) {
+                        final plan = currentPlans[index];
 
                         return PlanCard(
                           plan: plan,
-
-                          isSelected:
-                              index ==
-                                  provider
-                                      .selectedPlanIndex,
-
+                          isSelected: index == provider.selectedPlanIndex,
                           onTap: () {
-                            provider
-                                .selectPlan(
-                              index,
-                            );
+                            provider.selectPlan(index);
                           },
                         );
                       },
                     ),
                   ),
-
                   const SizedBox(height: 12),
 
                   // ==================================================
                   // CONTINUE
                   // ==================================================
-
                   SizedBox(
-                    width:
-                        double.infinity,
-
+                    width: double.infinity,
                     height: 54,
-
                     child: Container(
-                      decoration:
-                          BoxDecoration(
-                        gradient:
-                            const LinearGradient(
-                          colors: [
-                            Color(0xFF6366F1),
-                            Color(0xFF8B5CF6),
-                          ],
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
                         ),
-
-                        borderRadius:
-                            BorderRadius.circular(
-                          28,
-                        ),
+                        borderRadius: BorderRadius.circular(28),
                       ),
-
                       child: Material(
-                        color:
-                            Colors.transparent,
-
+                        color: Colors.transparent,
                         child: InkWell(
-                          borderRadius:
-                              BorderRadius.circular(
-                            28,
-                          ),
-
+                          borderRadius: BorderRadius.circular(28),
                           onTap: () {
-                            _continue(
-                              context,
-                              provider,
-                            );
+                            _continue(context, provider);
                           },
-
-                          child:
-                              const Center(
+                          child: const Center(
                             child: Text(
                               'Continue',
-
-                              style:
-                                  TextStyle(
-                                color:
-                                    Colors.white,
-                                fontWeight:
-                                    FontWeight.w700,
-                                fontSize:
-                                    15.5,
-                              ),
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15.5),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 18),
                 ],
               ),
@@ -335,79 +158,39 @@ class _ChoosePlanScreenState
     required int index,
     required PlanProvider provider,
   }) {
-    final isSelected =
-        provider.billingCycle ==
-            index;
+    final isSelected = provider.billingCycle == index;
 
     return GestureDetector(
       onTap: () {
-        provider.setBillingCycle(
-          index,
-        );
+        provider.setBillingCycle(index);
       },
-
       child: AnimatedContainer(
-        duration:
-            const Duration(
-          milliseconds: 200,
-        ),
-
-        padding:
-            const EdgeInsets.symmetric(
-          vertical: 11,
-        ),
-
-        decoration:
-            BoxDecoration(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        decoration: BoxDecoration(
           gradient: isSelected
-              ? const LinearGradient(
-                  colors: [
-                    Color(0xFF6366F1),
-                    Color(0xFF8B5CF6),
-                  ],
-                )
+              ? const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)])
               : null,
-
-          borderRadius:
-              BorderRadius.circular(
-            26,
-          ),
+          borderRadius: BorderRadius.circular(26),
         ),
-
         child: Center(
           child: RichText(
             text: TextSpan(
               children: [
-
                 TextSpan(
                   text: label,
-
                   style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : Colors.black54,
-
-                    fontWeight:
-                        FontWeight.w600,
-
+                    color: isSelected ? Colors.white : Colors.black54,
+                    fontWeight: FontWeight.w600,
                     fontSize: 13.5,
                   ),
                 ),
-
                 if (suffix != null)
                   TextSpan(
-                    text:
-                        ' $suffix',
-
-                    style:
-                        TextStyle(
-                      color: isSelected
-                          ? Colors.white70
-                          : Colors.grey,
-
-                      fontWeight:
-                          FontWeight.w500,
-
+                    text: ' $suffix',
+                    style: TextStyle(
+                      color: isSelected ? Colors.white70 : Colors.grey,
+                      fontWeight: FontWeight.w500,
                       fontSize: 11.5,
                     ),
                   ),
@@ -423,51 +206,29 @@ class _ChoosePlanScreenState
   // CONTINUE TO PAYMENT
   // ============================================================
 
-  void _continue(
-    BuildContext context,
-    PlanProvider provider,
-  ) {
+  void _continue(BuildContext context, PlanProvider provider) {
     // ------------------------------------------------------------
     // FREE PLAN
     // ------------------------------------------------------------
-
     if (provider.isFree) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Free plan selected.',
-          ),
-        ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Free plan selected.')),
       );
-
       return;
     }
 
     // ------------------------------------------------------------
     // PAID PLAN
     // ------------------------------------------------------------
-
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            SecurePaymentScreen(
-          planId:
-              provider.selectedPlanId,
-
-          planName:
-              provider.selectedPlanName,
-
-          billingCycle:
-              provider.billingText,
-
-          amount:
-              provider.selectedPrice,
-
-          currency:
-              provider.currency,
+        builder: (_) => SecurePaymentScreen(
+          planId: provider.selectedPlanId,
+          planName: provider.selectedPlanName,
+          billingCycle: provider.billingText, // ab lowercase 'monthly'/'yearly'
+          amount: provider.selectedPrice,
+          currency: provider.currency,
         ),
       ),
     );

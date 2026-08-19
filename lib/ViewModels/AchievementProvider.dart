@@ -1,7 +1,9 @@
-import 'package:bookverse/Repository/AchievementProvider.dart';
-import 'package:flutter/material.dart';
-import 'package:bookverse/Models/BookModel.dart';
+// lib/ViewModels/AchievementProvider.dart
+
 import 'package:bookverse/Models/AchievementModel.dart';
+import 'package:bookverse/Models/BookModel.dart';
+import 'package:bookverse/Repository/AchievementRepository.dart';
+import 'package:flutter/material.dart';
 
 class AchievementProvider extends ChangeNotifier {
   // ============================================================
@@ -27,12 +29,20 @@ class AchievementProvider extends ChangeNotifier {
 
   int _points = 0;
 
-  final Set<int> _completedBookIds = {};
+  // Unique book IDs
+  final Set<int> _completedBookIds =
+      <int>{};
 
-  final Set<String> _rewardedAchievementIds = {};
+  // Book titles
+  final List<String> _completedBookTitles =
+      <String>[];
+
+  // Already rewarded achievements
+  final Set<String> _rewardedAchievementIds =
+      <String>{};
 
   // ============================================================
-  // LOADING
+  // STATE
   // ============================================================
 
   bool _isLoading = false;
@@ -51,22 +61,38 @@ class AchievementProvider extends ChangeNotifier {
   // GETTERS
   // ============================================================
 
-  int get completedBooks => _completedBooks;
+  int get completedBooks =>
+      _completedBooks;
 
   int get points => _points;
 
   int get totalStars => _points;
 
   Set<int> get completedBookIds =>
-      Set.unmodifiable(_completedBookIds);
+      Set.unmodifiable(
+        _completedBookIds,
+      );
+
+  // ============================================================
+  // COMPLETED BOOK TITLES
+  // ============================================================
+
+  List<String> get completedBookTitles =>
+      List.unmodifiable(
+        _completedBookTitles,
+      );
 
   // ============================================================
   // LOAD FROM FIREBASE
   // ============================================================
 
   Future<void> loadAchievements({
-    String? userName,
+    String? name,
   }) async {
+    if (_isLoading) {
+      return;
+    }
+
     _isLoading = true;
     _errorMessage = null;
 
@@ -74,22 +100,40 @@ class AchievementProvider extends ChangeNotifier {
 
     try {
       final data =
-          await _repository.loadAchievementData();
+          await _repository
+              .loadAchievementData();
 
       // ========================================================
       // USER NAME
       // ========================================================
 
-      if (userName != null &&
-          userName.trim().isNotEmpty) {
-        _userName = userName.trim();
+      if (name != null &&
+          name.trim().isNotEmpty) {
+        _userName =
+            name.trim();
       } else if (data != null) {
         _userName =
-            data['userName']?.toString() ?? '';
+            data['userName']
+                ?.toString() ??
+                '';
       }
 
       // ========================================================
-      // NO DATA YET
+      // RESET LOCAL DATA
+      // ========================================================
+
+      _completedBooks = 0;
+
+      _points = 0;
+
+      _completedBookIds.clear();
+
+      _completedBookTitles.clear();
+
+      _rewardedAchievementIds.clear();
+
+      // ========================================================
+      // NO FIREBASE DATA
       // ========================================================
 
       if (data == null) {
@@ -98,36 +142,19 @@ class AchievementProvider extends ChangeNotifier {
       }
 
       // ========================================================
-      // COMPLETED BOOKS
-      // ========================================================
-
-      _completedBooks =
-          (data['completedBooks'] as num?)
-                  ?.toInt() ??
-              0;
-
-      // ========================================================
-      // POINTS
-      // ========================================================
-
-      _points =
-          (data['points'] as num?)
-                  ?.toInt() ??
-              0;
-
-      // ========================================================
       // COMPLETED BOOK IDS
       // ========================================================
-
-      _completedBookIds.clear();
 
       final completedIds =
           data['completedBookIds'];
 
       if (completedIds is List) {
-        for (final id in completedIds) {
+        for (final id
+            in completedIds) {
           final parsedId =
-              int.tryParse(id.toString());
+              int.tryParse(
+            id.toString(),
+          );
 
           if (parsedId != null) {
             _completedBookIds.add(
@@ -138,16 +165,86 @@ class AchievementProvider extends ChangeNotifier {
       }
 
       // ========================================================
-      // REWARDED ACHIEVEMENT IDS
+      // COMPLETED BOOK TITLES
       // ========================================================
 
-      _rewardedAchievementIds.clear();
+      final titles =
+          data['completedBookTitles'];
+
+      if (titles is List) {
+        for (final title
+            in titles) {
+          final value =
+              title.toString().trim();
+
+          if (value.isNotEmpty &&
+              !_completedBookTitles
+                  .contains(value)) {
+            _completedBookTitles.add(
+              value,
+            );
+          }
+        }
+      }
+
+      // ========================================================
+      // COMPLETED BOOK COUNT
+      // ========================================================
+      //
+      // Always calculate from unique IDs.
+      //
+      // This prevents:
+      //
+      // Book A
+      // Book B
+      // Book C
+      //
+      // becoming only 1 book accidentally.
+      //
+
+      _completedBooks =
+          _completedBookIds.length;
+
+      // ========================================================
+      // BACKWARD COMPATIBILITY
+      // ========================================================
+      //
+      // If old Firebase data doesn't have IDs but has
+      // completedBooks, keep the old count.
+      //
+
+      if (_completedBooks == 0) {
+        final oldCount =
+            data['completedBooks'];
+
+        if (oldCount is num) {
+          _completedBooks =
+              oldCount.toInt();
+        }
+      }
+
+      // ========================================================
+      // POINTS
+      // ========================================================
+
+      final pointsValue =
+          data['points'];
+
+      if (pointsValue is num) {
+        _points =
+            pointsValue.toInt();
+      }
+
+      // ========================================================
+      // REWARDED ACHIEVEMENTS
+      // ========================================================
 
       final rewardedIds =
           data['rewardedAchievementIds'];
 
       if (rewardedIds is List) {
-        for (final id in rewardedIds) {
+        for (final id
+            in rewardedIds) {
           _rewardedAchievementIds.add(
             id.toString(),
           );
@@ -156,10 +253,17 @@ class AchievementProvider extends ChangeNotifier {
 
       _isInitialized = true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage =
+          e.toString();
+
       _isInitialized = true;
+
+      debugPrint(
+        'Achievement load error: $e',
+      );
     } finally {
       _isLoading = false;
+
       notifyListeners();
     }
   }
@@ -169,38 +273,55 @@ class AchievementProvider extends ChangeNotifier {
   // ============================================================
 
   Future<void> _saveToFirebase() async {
-    try {
-      await _repository.saveAchievementData(
-        userName: _userName,
-        completedBooks: _completedBooks,
-        points: _points,
-        completedBookIds: _completedBookIds,
-        rewardedAchievementIds:
-            _rewardedAchievementIds,
-      );
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-    }
+    await _repository
+        .saveAchievementData(
+      userName: _userName,
+
+      completedBooks:
+          _completedBooks,
+
+      points:
+          _points,
+
+      completedBookIds:
+          Set<int>.from(
+        _completedBookIds,
+      ),
+
+      completedBookTitles:
+          List<String>.from(
+        _completedBookTitles,
+      ),
+
+      rewardedAchievementIds:
+          Set<String>.from(
+        _rewardedAchievementIds,
+      ),
+    );
   }
 
   // ============================================================
   // ACHIEVEMENTS
   // ============================================================
 
-  List<AchievementModel> get achievements {
+  List<AchievementModel>
+      get achievements {
     return [
       AchievementModel(
         id: 'first_chapter',
         title: 'First Chapter',
-        description: 'Read your first book',
-        icon: Icons.menu_book_rounded,
+        description:
+            'Read your first book',
+        icon:
+            Icons.menu_book_rounded,
         iconBackgroundColor:
             const Color(0xFFEDE4FF),
         iconColor:
             const Color(0xFF6938EF),
         current:
-            _completedBooks >= 1 ? 1 : 0,
+            _completedBooks >= 1
+                ? 1
+                : 0,
         target: 1,
         reward: 150,
         category: 'Reading',
@@ -209,14 +330,19 @@ class AchievementProvider extends ChangeNotifier {
       AchievementModel(
         id: 'book_explorer',
         title: 'Book Explorer',
-        description: 'Read 3 books',
-        icon: Icons.auto_stories_rounded,
+        description:
+            'Read 3 books',
+        icon:
+            Icons.auto_stories_rounded,
         iconBackgroundColor:
             const Color(0xFFE3F1FF),
         iconColor:
             const Color(0xFF2979FF),
         current:
-            _completedBooks.clamp(0, 3),
+            _completedBooks.clamp(
+          0,
+          3,
+        ),
         target: 3,
         reward: 300,
         category: 'Reading',
@@ -225,9 +351,11 @@ class AchievementProvider extends ChangeNotifier {
       const AchievementModel(
         id: 'reading_streak',
         title: 'Reading Streak',
-        description: 'Read for 7 days in a row',
+        description:
+            'Read for 7 days in a row',
         icon:
-            Icons.local_fire_department_rounded,
+            Icons
+                .local_fire_department_rounded,
         iconBackgroundColor:
             Color(0xFFFFE7D8),
         iconColor:
@@ -241,7 +369,8 @@ class AchievementProvider extends ChangeNotifier {
       const AchievementModel(
         id: 'daily_reader',
         title: 'Daily Reader',
-        description: 'Read for 15 days',
+        description:
+            'Read for 15 days',
         icon:
             Icons.calendar_month_rounded,
         iconBackgroundColor:
@@ -257,7 +386,8 @@ class AchievementProvider extends ChangeNotifier {
       AchievementModel(
         id: 'avid_reader',
         title: 'Avid Reader',
-        description: 'Read 10 books',
+        description:
+            'Read 10 books',
         icon:
             Icons.emoji_events_rounded,
         iconBackgroundColor:
@@ -265,7 +395,10 @@ class AchievementProvider extends ChangeNotifier {
         iconColor:
             const Color(0xFF8C8C96),
         current:
-            _completedBooks.clamp(0, 10),
+            _completedBooks.clamp(
+          0,
+          10,
+        ),
         target: 10,
         reward: 500,
         category: 'Reading',
@@ -274,15 +407,20 @@ class AchievementProvider extends ChangeNotifier {
       AchievementModel(
         id: 'book_master',
         title: 'Book Master',
-        description: 'Read 25 books',
+        description:
+            'Read 25 books',
         icon:
-            Icons.workspace_premium_rounded,
+            Icons
+                .workspace_premium_rounded,
         iconBackgroundColor:
             const Color(0xFFFFF0D9),
         iconColor:
             const Color(0xFFFFA400),
         current:
-            _completedBooks.clamp(0, 25),
+            _completedBooks.clamp(
+          0,
+          25,
+        ),
         target: 25,
         reward: 1000,
         category: 'Collection',
@@ -291,15 +429,20 @@ class AchievementProvider extends ChangeNotifier {
       AchievementModel(
         id: 'book_collector',
         title: 'Book Collector',
-        description: 'Read 50 books',
+        description:
+            'Read 50 books',
         icon:
-            Icons.collections_bookmark_rounded,
+            Icons
+                .collections_bookmark_rounded,
         iconBackgroundColor:
             const Color(0xFFEDE4FF),
         iconColor:
             const Color(0xFF6938EF),
         current:
-            _completedBooks.clamp(0, 50),
+            _completedBooks.clamp(
+          0,
+          50,
+        ),
         target: 50,
         reward: 2500,
         category: 'Collection',
@@ -348,80 +491,222 @@ class AchievementProvider extends ChangeNotifier {
   Future<bool> completeBook(
     BookModel book,
   ) async {
+    final bookId =
+        book.id;
+
+    final bookTitle =
+        book.title.trim();
+
     // ========================================================
-    // SAME BOOK CHECK
+    // ALREADY COMPLETED
     // ========================================================
 
-    if (_completedBookIds.contains(book.id)) {
+    if (_completedBookIds
+        .contains(bookId)) {
+      debugPrint(
+        'Achievement: book already completed: $bookId',
+      );
+
       return true;
     }
 
+    // ========================================================
+    // OLD STATE
+    // ========================================================
+
+    final oldCompletedBooks =
+        _completedBooks;
+
+    final oldPoints =
+        _points;
+
+    final oldCompletedIds =
+        Set<int>.from(
+      _completedBookIds,
+    );
+
+    final oldCompletedTitles =
+        List<String>.from(
+      _completedBookTitles,
+    );
+
+    final oldRewardedIds =
+        Set<String>.from(
+      _rewardedAchievementIds,
+    );
+
     try {
-      // ========================================================
-      // MARK BOOK COMPLETED
-      // ========================================================
+      // ======================================================
+      // ADD BOOK ID
+      // ======================================================
 
-      _completedBookIds.add(book.id);
+      _completedBookIds.add(
+        bookId,
+      );
 
-      _completedBooks++;
+      // ======================================================
+      // ADD BOOK TITLE
+      // ======================================================
 
-      // ========================================================
-      // REWARDS
-      // ========================================================
+      if (bookTitle.isNotEmpty &&
+          !_completedBookTitles
+              .contains(bookTitle)) {
+        _completedBookTitles.add(
+          bookTitle,
+        );
+      }
+
+      // ======================================================
+      // COUNT UNIQUE BOOKS
+      // ======================================================
+
+      _completedBooks =
+          _completedBookIds.length;
+
+      // ======================================================
+      // ACHIEVEMENT REWARDS
+      // ======================================================
 
       _checkAndGiveAchievementRewards();
 
-      // ========================================================
-      // UPDATE UI FIRST
-      // ========================================================
+      _errorMessage = null;
+
+      // ======================================================
+      // UPDATE UI
+      // ======================================================
 
       notifyListeners();
 
-      // ========================================================
-      // SAVE FIREBASE
-      // ========================================================
+      debugPrint(
+        'Achievement: book completed',
+      );
+
+      debugPrint(
+        'Book ID: $bookId',
+      );
+
+      debugPrint(
+        'Book Title: $bookTitle',
+      );
+
+      debugPrint(
+        'Completed Books: $_completedBooks',
+      );
+
+      debugPrint(
+        'Completed Titles: $_completedBookTitles',
+      );
+
+      // ======================================================
+      // FIREBASE
+      // ======================================================
 
       await _saveToFirebase();
-      _errorMessage = null;
+
+      debugPrint(
+        'Achievement: Firebase save successful',
+      );
+
       return true;
     } catch (e) {
-      _completedBookIds.remove(book.id);
+      // ======================================================
+      // ROLLBACK
+      // ======================================================
+
       _completedBooks =
-          _completedBooks > 0 ? _completedBooks - 1 : 0;
-      _errorMessage = e.toString();
+          oldCompletedBooks;
+
+      _points =
+          oldPoints;
+
+      _completedBookIds
+        ..clear()
+        ..addAll(
+          oldCompletedIds,
+        );
+
+      _completedBookTitles
+        ..clear()
+        ..addAll(
+          oldCompletedTitles,
+        );
+
+      _rewardedAchievementIds
+        ..clear()
+        ..addAll(
+          oldRewardedIds,
+        );
+
+      _errorMessage =
+          e.toString();
+
       notifyListeners();
+
+      debugPrint(
+        'Achievement completeBook error: $e',
+      );
+
       return false;
     }
   }
 
   // ============================================================
-  // CHECK AND GIVE REWARDS
+  // REWARD CHECK
   // ============================================================
 
   void _checkAndGiveAchievementRewards() {
-    for (final achievement in achievements) {
-      if (achievement.isCompleted) {
-        if (!_rewardedAchievementIds
-            .contains(achievement.id)) {
-          _points += achievement.reward;
-
-          _rewardedAchievementIds.add(
-            achievement.id,
-          );
-        }
+    for (final achievement
+        in achievements) {
+      if (!achievement.isCompleted) {
+        continue;
       }
+
+      if (_rewardedAchievementIds
+          .contains(
+        achievement.id,
+      )) {
+        continue;
+      }
+
+      _points +=
+          achievement.reward;
+
+      _rewardedAchievementIds.add(
+        achievement.id,
+      );
+
+      debugPrint(
+        'Achievement reward: '
+        '${achievement.id} '
+        '+${achievement.reward}',
+      );
     }
   }
 
   // ============================================================
-  // CHECK BOOK
+  // BOOK COMPLETED?
   // ============================================================
 
   bool isBookCompleted(
     BookModel book,
   ) {
     return _completedBookIds
-        .contains(book.id);
+        .contains(
+      book.id,
+    );
+  }
+
+  // ============================================================
+  // REFRESH
+  // ============================================================
+
+  Future<void>
+      refreshAchievements() async {
+    await loadAchievements(
+      name: _userName.isEmpty
+          ? null
+          : _userName,
+    );
   }
 
   // ============================================================
@@ -429,16 +714,27 @@ class AchievementProvider extends ChangeNotifier {
   // ============================================================
 
   Future<void> resetAchievements() async {
-    _completedBooks = 0;
+    try {
+      _completedBooks = 0;
 
-    _points = 0;
+      _points = 0;
 
-    _completedBookIds.clear();
+      _completedBookIds.clear();
 
-    _rewardedAchievementIds.clear();
+      _completedBookTitles.clear();
 
-    notifyListeners();
+      _rewardedAchievementIds.clear();
 
-    await _saveToFirebase();
+      _errorMessage = null;
+
+      notifyListeners();
+
+      await _saveToFirebase();
+    } catch (e) {
+      _errorMessage =
+          e.toString();
+
+      notifyListeners();
+    }
   }
 }

@@ -15,7 +15,12 @@ class AchievementScreen extends StatefulWidget {
       _AchievementScreenState();
 }
 
-class _AchievementScreenState extends State<AchievementScreen> {
+class _AchievementScreenState
+    extends State<AchievementScreen> {
+  // ============================================================
+  // CATEGORY
+  // ============================================================
+
   String _selectedCategory = 'All';
 
   // ============================================================
@@ -26,20 +31,18 @@ class _AchievementScreenState extends State<AchievementScreen> {
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadAchievementData();
-    });
-  }
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        if (!mounted) return;
 
-  // ============================================================
-  // LOAD BACKEND DATA
-  // ============================================================
+        final provider =
+            context.read<AchievementProvider>();
 
-  Future<void> _loadAchievementData() async {
-    final provider =
-        context.read<AchievementProvider>();
-
-    await provider.loadAchievements();
+        if (!provider.isInitialized) {
+          provider.loadAchievements();
+        }
+      },
+    );
   }
 
   // ============================================================
@@ -63,39 +66,249 @@ class _AchievementScreenState extends State<AchievementScreen> {
   }
 
   // ============================================================
+  // COMPLETED BOOKS SECTION
+  // ============================================================
+
+  Widget _buildCompletedBooks(
+    AchievementProvider provider,
+  ) {
+    final completedBookTitles =
+        provider.completedBookTitles;
+
+    if (completedBookTitles.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        8,
+        20,
+        20,
+      ),
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+        children: [
+          // ======================================================
+          // HEADER
+          // ======================================================
+
+          Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.all(9),
+                decoration: BoxDecoration(
+                  color:
+                      const Color(0xFFEDE4FF),
+                  borderRadius:
+                      BorderRadius.circular(
+                    12,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.library_books_rounded,
+                  color:
+                      Color(0xFF6938EF),
+                  size: 20,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Completed Books',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight:
+                            FontWeight.w700,
+                        color:
+                            Color(0xFF202338),
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Books you have completed',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color:
+                            Color(0xFF777B91),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      const Color(0xFFEDE4FF),
+                  borderRadius:
+                      BorderRadius.circular(
+                    20,
+                  ),
+                ),
+                child: Text(
+                  '${completedBookTitles.length}',
+                  style: const TextStyle(
+                    color:
+                        Color(0xFF6938EF),
+                    fontSize: 12,
+                    fontWeight:
+                        FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // ======================================================
+          // BOOK LIST
+          // ======================================================
+
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:
+                  BorderRadius.circular(16),
+              border: Border.all(
+                color:
+                    const Color(0xFFE9E9F1),
+              ),
+            ),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics:
+                  const NeverScrollableScrollPhysics(),
+              itemCount:
+                  completedBookTitles.length,
+              separatorBuilder:
+                  (context, index) {
+                return const Divider(
+                  height: 1,
+                  indent: 60,
+                  endIndent: 16,
+                );
+              },
+              itemBuilder:
+                  (context, index) {
+                final title =
+                    completedBookTitles[index];
+
+                return ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 4,
+                  ),
+                  leading: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color:
+                          const Color(
+                        0xFFEFFAF1,
+                      ),
+                      borderRadius:
+                          BorderRadius.circular(
+                        11,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      color:
+                          Color(0xFF4CAF50),
+                      size: 21,
+                    ),
+                  ),
+                  title: Text(
+                    title,
+                    maxLines: 2,
+                    overflow:
+                        TextOverflow.ellipsis,
+                    style:
+                        const TextStyle(
+                      fontSize: 14,
+                      fontWeight:
+                          FontWeight.w600,
+                      color:
+                          Color(0xFF202338),
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'Completed',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color:
+                          Color(0xFF777B91),
+                    ),
+                  ),
+                  trailing:
+                      const Icon(
+                    Icons
+                        .check_circle_rounded,
+                    color:
+                        Color(0xFF4CAF50),
+                    size: 20,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
   // BUILD
   // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Consumer<AchievementProvider>(
       builder: (
         context,
-        achievementProvider,
+        provider,
         child,
       ) {
         final achievements =
             _filteredAchievements(
-          achievementProvider,
+          provider,
         );
 
         return Scaffold(
           backgroundColor:
               const Color(0xFFF9F9FD),
-
           body: SafeArea(
             child: Column(
               children: [
-
                 // ==================================================
                 // TOP BAR
                 // ==================================================
 
                 AchievementTopBar(
                   stars:
-                      achievementProvider.totalStars,
+                      provider.totalStars,
                   onBack: () {
-                    Navigator.maybePop(context);
+                    Navigator.maybePop(
+                      context,
+                    );
                   },
                 ),
 
@@ -103,7 +316,7 @@ class _AchievementScreenState extends State<AchievementScreen> {
                 // LOADING
                 // ==================================================
 
-                if (achievementProvider.isLoading)
+                if (provider.isLoading)
                   const Expanded(
                     child: Center(
                       child:
@@ -113,137 +326,154 @@ class _AchievementScreenState extends State<AchievementScreen> {
                       ),
                     ),
                   )
-
-                // ==================================================
-                // CONTENT
-                // ==================================================
-
                 else
                   Expanded(
-                    child: ListView(
-                      padding:
-                          const EdgeInsets.only(
-                        top: 4,
-                        bottom: 25,
+                    child: RefreshIndicator(
+                      color:
+                          const Color(
+                        0xFF6938EF,
                       ),
-                      children: [
-
-                        // ==================================================
-                        // HERO BANNER
-                        // ==================================================
-
-                        const AchievementHeroBanner(),
-
-                        // ==================================================
-                        // OVERALL PROGRESS
-                        // ==================================================
-
-                        OverallProgressCard(
-                          completed:
-                              achievementProvider
-                                  .completedAchievements,
-                          total:
-                              achievementProvider
-                                  .totalAchievements,
-                          stars:
-                              achievementProvider
-                                  .totalStars,
+                      onRefresh: () async {
+                        await provider
+                            .refreshAchievements();
+                      },
+                      child: ListView(
+                        padding:
+                            const EdgeInsets
+                                .only(
+                          top: 4,
+                          bottom: 25,
                         ),
+                        children: [
+                          // ==========================================
+                          // HERO
+                          // ==========================================
 
-                        const SizedBox(
-                          height: 14,
-                        ),
+                          const AchievementHeroBanner(),
 
-                        // ==================================================
-                        // NEXT REWARD
-                        // ==================================================
+                          // ==========================================
+                          // OVERALL PROGRESS
+                          // ==========================================
 
-                        NextRewardCard(
-                          completedBooks:
-                              achievementProvider
-                                  .completedBooks,
-                        ),
-
-                        // ==================================================
-                        // CATEGORY FILTER
-                        // ==================================================
-
-                        AchievementCategoryTabs(
-                          selectedCategory:
-                              _selectedCategory,
-                          onCategoryChanged:
-                              (category) {
-                            setState(() {
-                              _selectedCategory =
-                                  category;
-                            });
-                          },
-                        ),
-
-                        const SizedBox(
-                          height: 12,
-                        ),
-
-                        // ==================================================
-                        // ERROR
-                        // ==================================================
-
-                        if (achievementProvider
-                                .errorMessage !=
-                            null)
-                          Padding(
-                            padding:
-                                const EdgeInsets
-                                    .symmetric(
-                              horizontal: 20,
-                              vertical: 15,
-                            ),
-                            child: Text(
-                              achievementProvider
-                                  .errorMessage!,
-                              textAlign:
-                                  TextAlign.center,
-                              style:
-                                  const TextStyle(
-                                color:
-                                    Colors.red,
-                                fontSize: 13,
-                              ),
-                            ),
+                          OverallProgressCard(
+                            completed: provider
+                                .completedAchievements,
+                            total: provider
+                                .totalAchievements,
+                            stars:
+                                provider.totalStars,
                           ),
 
-                        // ==================================================
-                        // ACHIEVEMENT LIST
-                        // ==================================================
+                          const SizedBox(
+                            height: 14,
+                          ),
 
-                        if (achievements.isEmpty)
-                          const Padding(
-                            padding:
-                                EdgeInsets.all(40),
-                            child: Center(
+                          // ==========================================
+                          // NEXT REWARD
+                          // ==========================================
+
+                          NextRewardCard(
+                            completedBooks:
+                                provider
+                                    .completedBooks,
+                          ),
+
+                          // ==========================================
+                          // CATEGORY
+                          // ==========================================
+
+                          AchievementCategoryTabs(
+                            selectedCategory:
+                                _selectedCategory,
+                            onCategoryChanged:
+                                (category) {
+                              setState(() {
+                                _selectedCategory =
+                                    category;
+                              });
+                            },
+                          ),
+
+                          const SizedBox(
+                            height: 12,
+                          ),
+
+                          // ==========================================
+                          // ERROR
+                          // ==========================================
+
+                          if (provider
+                                  .errorMessage !=
+                              null)
+                            Padding(
+                              padding:
+                                  const EdgeInsets
+                                      .symmetric(
+                                horizontal: 20,
+                                vertical: 15,
+                              ),
                               child: Text(
-                                'No achievements found.',
+                                provider
+                                    .errorMessage!,
+                                textAlign:
+                                    TextAlign
+                                        .center,
                                 style:
-                                    TextStyle(
+                                    const TextStyle(
                                   color:
-                                      Color(
-                                    0xFF666B82,
-                                  ),
-                                  fontSize: 14,
+                                      Colors.red,
+                                  fontSize: 13,
                                 ),
                               ),
                             ),
-                          )
-                        else
-                          ...achievements.map(
-                            (achievement) {
-                              return AchievementCard(
-                                achievement:
-                                    achievement,
-                              );
-                            },
+
+                          // ==========================================
+                          // ACHIEVEMENTS
+                          // ==========================================
+
+                          if (achievements
+                              .isEmpty)
+                            const Padding(
+                              padding:
+                                  EdgeInsets.all(
+                                40,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'No achievements found.',
+                                  style:
+                                      TextStyle(
+                                    color:
+                                        Color(
+                                      0xFF666B82,
+                                    ),
+                                    fontSize:
+                                        14,
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            ...achievements.map(
+                              (
+                                achievement,
+                              ) {
+                                return AchievementCard(
+                                  achievement:
+                                      achievement,
+                                );
+                              },
+                            ),
+
+                          // ==========================================
+                          // COMPLETED BOOKS
+                          // ==========================================
+
+                          _buildCompletedBooks(
+                            provider,
                           ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
               ],

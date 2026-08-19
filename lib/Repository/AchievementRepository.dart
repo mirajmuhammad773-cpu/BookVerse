@@ -13,7 +13,7 @@ class AchievementRepository {
       FirebaseAuth.instance;
 
   // ============================================================
-  // CURRENT USER UID
+  // CURRENT USER
   // ============================================================
 
   String? get currentUserId {
@@ -24,9 +24,8 @@ class AchievementRepository {
   // ACHIEVEMENT DOCUMENT
   // ============================================================
 
-  DocumentReference<Map<String, dynamic>> _achievementDocument(
-    String uid,
-  ) {
+  DocumentReference<Map<String, dynamic>>
+      _achievementDocument(String uid) {
     return _firestore
         .collection('users')
         .doc(uid)
@@ -42,7 +41,13 @@ class AchievementRepository {
     required String userName,
     required int completedBooks,
     required int points,
+
+    // Unique IDs
     required Set<int> completedBookIds,
+
+    // Book titles for displaying in Achievement Screen
+    required List<String> completedBookTitles,
+
     required Set<String> rewardedAchievementIds,
   }) async {
     final uid = currentUserId;
@@ -63,21 +68,30 @@ class AchievementRepository {
       'uid': uid,
 
       // ========================================================
-      // USER INFORMATION
+      // USER
       // ========================================================
 
       'userName': userName,
 
       // ========================================================
-      // READING DATA
+      // READING
       // ========================================================
 
       'completedBooks': completedBooks,
 
-      'points': points,
-
+      // Keep IDs for unique book checking
       'completedBookIds':
           completedBookIds.toList(),
+
+      // Store titles for Achievement Screen
+      'completedBookTitles':
+          completedBookTitles,
+
+      // ========================================================
+      // POINTS / REWARDS
+      // ========================================================
+
+      'points': points,
 
       'rewardedAchievementIds':
           rewardedAchievementIds.toList(),
@@ -104,10 +118,11 @@ class AchievementRepository {
   }
 
   // ============================================================
-  // LOAD ACHIEVEMENT DATA
+  // LOAD
   // ============================================================
 
-  Future<Map<String, dynamic>?> loadAchievementData() async {
+  Future<Map<String, dynamic>?>
+      loadAchievementData() async {
     final uid = currentUserId;
 
     if (uid == null) {
@@ -125,7 +140,7 @@ class AchievementRepository {
   }
 
   // ============================================================
-  // DELETE ACHIEVEMENT DATA
+  // DELETE
   // ============================================================
 
   Future<void> deleteAchievementData() async {

@@ -36,11 +36,9 @@ class ReadingHistoryProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  bool get isInitialized =>
-      _isInitialized;
+  bool get isInitialized => _isInitialized;
 
-  String? get errorMessage =>
-      _errorMessage;
+  String? get errorMessage => _errorMessage;
 
   // ============================================================
   // CONSTRUCTOR
@@ -81,52 +79,146 @@ class ReadingHistoryProvider extends ChangeNotifier {
     }
   }
 
-  // ============================================================
-  // UPDATE READING PROGRESS
-  // ============================================================
+  
 
   Future<void> updateReadingProgress({
     required BookModel book,
     required int currentPage,
     required int totalPages,
+    required Set<int> readPages,
   }) async {
-    // ==========================================================
-    // IMPORTANT
-    //
-    // User must move from first page.
-    //
-    // Page index:
-    // 0 = first page
-    // 1 = second page
-    // 2 = third page
-    //
-    // If user opens book and leaves on page 0,
-    // NO history is created.
-    // ==========================================================
-
-    if (currentPage <= 0) {
+    if (totalPages <= 0 ||
+        currentPage < 0 ||
+        currentPage >= totalPages) {
       return;
     }
+
+    // Preserve pages already saved, then add the pages supplied by the
+    // reader. This prevents progress from being lost between sessions.
+    final existingHistory =
+        getBookHistory(book.id.toString());
+
+    final pagesToSave = <int>{
+      ...?existingHistory?.readPages,
+      ...readPages,
+    }..removeWhere(
+        (page) =>
+            page < 0 ||
+            page >= totalPages,
+      );
+
+    final history = ReadingHistoryModel.fromBook(
+      book: book,
+      currentPage: currentPage,
+      totalPages: totalPages,
+      readPages: pagesToSave.toList(),
+    );
+
+    final existingIndex = _history.indexWhere(
+      (item) => item.bookId == history.bookId,
+    );
+
+    if (existingIndex == -1) {
+      _history.insert(0, history);
+    } else {
+      _history[existingIndex] = history;
+    }
+
+    if (_history.length > 50) {
+      _history = _history.take(50).toList();
+    }
+
+    notifyListeners();
+
+    try {
+      await _repository.saveReadingHistory(history);
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> markPageAsRead({
+    required BookModel book,
+    required int pageIndex,
+    required int totalPages,
+  }) async {
+    // ==========================================================
+    // VALIDATION
+    // ==========================================================
 
     if (totalPages <= 0) {
       return;
     }
 
-    final safeCurrentPage =
-        currentPage.clamp(
-      0,
-      totalPages - 1,
+    if (pageIndex < 0 ||
+        pageIndex >= totalPages) {
+      return;
+    }
+
+    // ==========================================================
+    // GET EXISTING HISTORY
+    // ==========================================================
+
+    final existingHistory =
+        getBookHistory(
+      book.id.toString(),
     );
 
-    final progress =
-        totalPages <= 1
-            ? 0.0
-            : safeCurrentPage /
-                (totalPages - 1);
+    // ==========================================================
+    // EXISTING READ PAGES
+    // ==========================================================
 
-    final completed =
-        safeCurrentPage >=
-            totalPages - 1;
+    final Set<int> readPages =
+        existingHistory != null
+            ? existingHistory.readPages.toSet()
+            : <int>{};
+
+    
+
+    final bool alreadyRead =
+        readPages.contains(
+      pageIndex,
+    );
+
+    if (!alreadyRead) {
+      readPages.add(
+        pageIndex,
+      );
+    }
+
+    // ==========================================================
+    // REMOVE INVALID PAGES
+    // ==========================================================
+
+    readPages.removeWhere(
+      (page) =>
+          page < 0 ||
+          page >= totalPages,
+    );
+
+    // ==========================================================
+    // SORT
+    // ==========================================================
+
+    final List<int> sortedReadPages =
+        readPages.toList()..sort();
+
+   
+
+    final double progress =
+        sortedReadPages.length /
+            totalPages;
+
+    
+
+    final bool completed =
+        sortedReadPages.length >=
+            totalPages;
+
+    // ==========================================================
+    // CREATE HISTORY
+    // ==========================================================
 
     final history =
         ReadingHistoryModel(
@@ -139,11 +231,18 @@ class ReadingHistoryProvider extends ChangeNotifier {
       imageUrl:
           book.imageUrl,
       progress:
-          progress.clamp(0.0, 1.0),
+          progress.clamp(
+        0.0,
+        1.0,
+      ),
       currentPage:
-          safeCurrentPage,
+          pageIndex,
       totalPages:
           totalPages,
+      readPages:
+          List.unmodifiable(
+        sortedReadPages,
+      ),
       status:
           completed
               ? 'Completed'
@@ -161,25 +260,42 @@ class ReadingHistoryProvider extends ChangeNotifier {
     final existingIndex =
         _history.indexWhere(
       (item) =>
-          item.bookId ==
-          history.bookId,
+          item.title ==
+          history.title,
     );
 
     if (existingIndex == -1) {
+      // --------------------------------------------------------
+      // NEW HISTORY
+      // --------------------------------------------------------
+
       _history.insert(
         0,
         history,
       );
     } else {
+      // --------------------------------------------------------
+      // UPDATE EXISTING
+      // --------------------------------------------------------
+
       _history[existingIndex] =
           history;
     }
 
-    // Keep only latest 50 locally.
+    // ==========================================================
+    // KEEP ONLY LATEST 50
+    // ==========================================================
+
     if (_history.length > 50) {
       _history =
-          _history.take(50).toList();
+          _history
+              .take(50)
+              .toList();
     }
+
+    // ==========================================================
+    // UPDATE UI IMMEDIATELY
+    // ==========================================================
 
     notifyListeners();
 
@@ -193,10 +309,95 @@ class ReadingHistoryProvider extends ChangeNotifier {
         history,
       );
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage =
+          e.toString();
 
       notifyListeners();
     }
+  }
+
+  // ============================================================
+  // GET READ PAGES
+  // ============================================================
+  //
+  // Returns pages actually read by the user.
+  //
+  // ============================================================
+
+  Set<int> getReadPages(
+    String title,
+  ) {
+    final history =
+        getBookHistory(
+      title,
+    );
+
+    if (history == null) {
+      return <int>{};
+    }
+
+    return history.readPages.toSet();
+  }
+
+  // ============================================================
+  // GET CURRENT PROGRESS
+  // ============================================================
+
+  double getBookProgress(
+    String title,
+  ) {
+    final history =
+        getBookHistory(
+      title,
+    );
+
+    if (history == null) {
+      return 0.0;
+    }
+
+    return history.progress
+        .clamp(
+      0.0,
+      1.0,
+    );
+  }
+
+  // ============================================================
+  // GET READ PAGE COUNT
+  // ============================================================
+
+  int getReadPageCount(
+    String title,
+  ) {
+    final history =
+        getBookHistory(
+      title,
+    );
+
+    if (history == null) {
+      return 0;
+    }
+
+    return history.readPages.length;
+  }
+
+  // ============================================================
+  // CHECK IF BOOK IS COMPLETED
+  // ============================================================
+
+  bool isBookCompleted(
+    String title,
+  ) {
+    final history =
+        getBookHistory(
+      title,
+    );
+
+    if (history == null) {
+      return false;
+    }
+
+    return history.completed;
   }
 
   // ============================================================
@@ -204,11 +405,12 @@ class ReadingHistoryProvider extends ChangeNotifier {
   // ============================================================
 
   bool hasHistory(
-    String bookId,
+    String title,
   ) {
     return _history.any(
       (item) =>
-          item.bookId == bookId,
+          item.bookId ==
+          title,
     );
   }
 
@@ -218,46 +420,56 @@ class ReadingHistoryProvider extends ChangeNotifier {
 
   ReadingHistoryModel?
       getBookHistory(
-    String bookId,
+    String title,
   ) {
     try {
       return _history.firstWhere(
         (item) =>
-            item.bookId == bookId,
+            item.bookId ==
+            title,
       );
     } catch (_) {
       return null;
     }
   }
 
-  // ============================================================
-  // DELETE
-  // ============================================================
+ 
 
   Future<void> deleteHistory(
-    String bookId,
+    String title,
   ) async {
     try {
+      final existingHistory =
+          getBookHistory(
+        title,
+      );
+
+      if (existingHistory == null) {
+        return;
+      }
+
       await _repository
           .deleteReadingHistory(
-        bookId,
+        existingHistory.title,
       );
 
       _history.removeWhere(
         (item) =>
-            item.bookId == bookId,
+            item.bookId ==
+            title,
       );
 
       notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage =
+          e.toString();
 
       notifyListeners();
     }
   }
 
   // ============================================================
-  // CLEAR
+  // CLEAR ALL HISTORY
   // ============================================================
 
   Future<void> clearHistory() async {
@@ -269,7 +481,8 @@ class ReadingHistoryProvider extends ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      _errorMessage =
+          e.toString();
 
       notifyListeners();
     }
@@ -281,5 +494,15 @@ class ReadingHistoryProvider extends ChangeNotifier {
 
   Future<void> refresh() async {
     await loadHistory();
+  }
+
+  // ============================================================
+  // CLEAR ERROR
+  // ============================================================
+
+  void clearError() {
+    _errorMessage = null;
+
+    notifyListeners();
   }
 }

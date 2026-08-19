@@ -5,51 +5,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../Models/PaymentModel.dart';
 
 class PaymentRepository {
-  // ============================================================
-  // FIREBASE
-  // ============================================================
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
-  final FirebaseFirestore _firestore =
-      FirebaseFirestore.instance;
-
-  final FirebaseAuth _auth =
-      FirebaseAuth.instance;
-
-  final FirebaseFunctions _functions =
-      FirebaseFunctions.instance;
-
-  // ============================================================
-  // PAYMENTS COLLECTION
-  // ============================================================
-
-  CollectionReference<Map<String, dynamic>>
-      get _paymentsCollection {
+  CollectionReference<Map<String, dynamic>> get _paymentsCollection {
     return _firestore.collection('payments');
   }
 
-  // ============================================================
-  // CURRENT USER
-  // ============================================================
-
   User get _currentUser {
     final user = _auth.currentUser;
-
     if (user == null) {
-      throw Exception(
-        'User is not logged in.',
-      );
+      throw Exception('User is not logged in.');
     }
-
     return user;
   }
 
-  String get currentUserId {
-    return _currentUser.uid;
-  }
-
-  // ============================================================
-  // CREATE PAYMENT RECORD
-  // ============================================================
+  String get currentUserId => _currentUser.uid;
 
   Future<String> createPaymentRecord({
     required String planId,
@@ -59,8 +31,7 @@ class PaymentRepository {
     required String currency,
   }) async {
     try {
-      final document =
-          _paymentsCollection.doc();
+      final document = _paymentsCollection.doc();
 
       final payment = PaymentModel(
         id: document.id,
@@ -73,30 +44,14 @@ class PaymentRepository {
         status: 'pending',
       );
 
-      await document.set(
-        payment.toMap(),
-      );
-
+      await document.set(payment.toMap());
       return document.id;
     } catch (e) {
-      throw Exception(
-        'Unable to create payment record: $e',
-      );
+      throw Exception('Unable to create payment record: $e');
     }
   }
 
-  // ============================================================
-  // CREATE STRIPE PAYMENT INTENT
-  //
-  // IMPORTANT:
-  // Stripe Secret Key is NOT used here.
-  //
-  // Flutter calls Firebase Cloud Function.
-  // Cloud Function uses Stripe Secret Key.
-  // ============================================================
-
-  Future<Map<String, dynamic>>
-      createStripePaymentIntent({
+  Future<Map<String, dynamic>> createStripePaymentIntent({
     required String paymentId,
     required String planId,
     required String planName,
@@ -105,195 +60,99 @@ class PaymentRepository {
     required String currency,
   }) async {
     try {
-      final callable =
-          _functions.httpsCallable(
-        'createPaymentIntent',
-      );
+      final callable = _functions.httpsCallable('createPaymentIntent');
 
-      final result =
-          await callable.call({
+      final result = await callable.call({
         'paymentId': paymentId,
         'planId': planId,
         'planName': planName,
         'billingCycle': billingCycle,
         'amount': amount,
-        'currency':
-            currency.toLowerCase(),
+        'currency': currency.toLowerCase(),
       });
 
-      final data =
-          Map<String, dynamic>.from(
-        result.data as Map,
-      );
-
-      return data;
+      return Map<String, dynamic>.from(result.data as Map);
     } on FirebaseFunctionsException catch (e) {
-      throw Exception(
-        e.message ??
-            'Unable to create Stripe payment.',
-      );
+      throw Exception(e.message ?? 'Unable to create Stripe payment.');
     } catch (e) {
-      throw Exception(
-        'Stripe payment initialization failed: $e',
-      );
+      throw Exception('Stripe payment initialization failed: $e');
     }
   }
 
-  // ============================================================
-  // GET PAYMENT
-  // ============================================================
-
-  Future<PaymentModel?> getPayment(
-    String paymentId,
-  ) async {
+  Future<PaymentModel?> getPayment(String paymentId) async {
     try {
-      final document =
-          await _paymentsCollection
-              .doc(paymentId)
-              .get();
-
-      if (!document.exists) {
-        return null;
-      }
-
-      return PaymentModel.fromDocument(
-        document,
-      );
+      final document = await _paymentsCollection.doc(paymentId).get();
+      if (!document.exists) return null;
+      return PaymentModel.fromDocument(document);
     } catch (e) {
-      throw Exception(
-        'Unable to get payment: $e',
-      );
+      throw Exception('Unable to get payment: $e');
     }
   }
 
   // ============================================================
-  // GET USER PAYMENTS
+  // WATCH SINGLE PAYMENT
+  // Webhook se status change hote hi yeh real-time notify karega.
   // ============================================================
+  Stream<PaymentModel?> watchPayment(String paymentId) {
+    return _paymentsCollection.doc(paymentId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      return PaymentModel.fromDocument(doc);
+    });
+  }
 
-  Future<List<PaymentModel>>
-      getUserPayments() async {
+  Future<List<PaymentModel>> getUserPayments() async {
     try {
-      final snapshot =
-          await _paymentsCollection
-              .where(
-                'userId',
-                isEqualTo: currentUserId,
-              )
-              .orderBy(
-                'createdAt',
-                descending: true,
-              )
-              .get();
+      final snapshot = await _paymentsCollection
+          .where('userId', isEqualTo: currentUserId)
+          .orderBy('createdAt', descending: true)
+          .get();
 
-      return snapshot.docs
-          .map(
-            (document) =>
-                PaymentModel.fromDocument(
-              document,
-            ),
-          )
-          .toList();
+      return snapshot.docs.map((document) => PaymentModel.fromDocument(document)).toList();
     } catch (e) {
-      throw Exception(
-        'Unable to load payment history: $e',
-      );
+      throw Exception('Unable to load payment history: $e');
     }
   }
 
-  // ============================================================
-  // WATCH USER PAYMENTS
-  // ============================================================
-
-  Stream<List<PaymentModel>>
-      watchUserPayments() {
+  Stream<List<PaymentModel>> watchUserPayments() {
     return _paymentsCollection
-        .where(
-          'userId',
-          isEqualTo: currentUserId,
-        )
-        .orderBy(
-          'createdAt',
-          descending: true,
-        )
+        .where('userId', isEqualTo: currentUserId)
+        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) {
-            return snapshot.docs
-                .map(
-                  (document) =>
-                      PaymentModel
-                          .fromDocument(
-                    document,
-                  ),
-                )
-                .toList();
-          },
-        );
+        .map((snapshot) {
+      return snapshot.docs.map((document) => PaymentModel.fromDocument(document)).toList();
+    });
   }
-
-  // ============================================================
-  // UPDATE PAYMENT STATUS
-  //
-  // Normally successful Stripe status should be updated
-  // by the Cloud Function / Stripe webhook.
-  // ============================================================
 
   Future<void> updatePaymentStatus({
     required String paymentId,
     required String status,
   }) async {
     try {
-      await _paymentsCollection
-          .doc(paymentId)
-          .update({
+      await _paymentsCollection.doc(paymentId).update({
         'status': status,
-        'updatedAt':
-            FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      throw Exception(
-        'Unable to update payment status: $e',
-      );
+      throw Exception('Unable to update payment status: $e');
     }
   }
 
-  // ============================================================
-  // DELETE PAYMENT
-  // ============================================================
-
-  Future<void> deletePayment(
-    String paymentId,
-  ) async {
+  Future<void> deletePayment(String paymentId) async {
     try {
-      await _paymentsCollection
-          .doc(paymentId)
-          .delete();
+      await _paymentsCollection.doc(paymentId).delete();
     } catch (e) {
-      throw Exception(
-        'Unable to delete payment: $e',
-      );
+      throw Exception('Unable to delete payment: $e');
     }
   }
 
-  // ============================================================
-  // CLEAR PENDING PAYMENT
-  // ============================================================
-
-  Future<void> cancelPendingPayment(
-    String paymentId,
-  ) async {
+  Future<void> cancelPendingPayment(String paymentId) async {
     try {
-      await _paymentsCollection
-          .doc(paymentId)
-          .update({
+      await _paymentsCollection.doc(paymentId).update({
         'status': 'cancelled',
-        'updatedAt':
-            FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      throw Exception(
-        'Unable to cancel payment: $e',
-      );
+      throw Exception('Unable to cancel payment: $e');
     }
   }
 }
