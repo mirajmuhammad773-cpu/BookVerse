@@ -18,8 +18,7 @@ class ReadingHistoryScreen extends StatefulWidget {
 
 class _ReadingHistoryScreenState
     extends State<ReadingHistoryScreen> {
-  static const _primary =
-      Color(0xFF6366F1);
+  static const _primary = Color(0xFF6366F1);
 
   int _selectedFilter = 0;
 
@@ -41,8 +40,7 @@ class _ReadingHistoryScreenState
   ) {
     final now = DateTime.now();
 
-    final difference =
-        now.difference(date);
+    final difference = now.difference(date);
 
     if (difference.inMinutes < 1) {
       return 'Just now';
@@ -60,14 +58,10 @@ class _ReadingHistoryScreenState
               : date.hour % 12;
 
       final minute =
-          date.minute
-              .toString()
-              .padLeft(2, '0');
+          date.minute.toString().padLeft(2, '0');
 
       final period =
-          date.hour >= 12
-              ? 'PM'
-              : 'AM';
+          date.hour >= 12 ? 'PM' : 'AM';
 
       return 'Today, $hour:$minute $period';
     }
@@ -87,19 +81,15 @@ class _ReadingHistoryScreenState
   // FILTER
   // ============================================================
 
-  List<ReadingHistoryModel>
-      _visibleHistory(
+  List<ReadingHistoryModel> _visibleHistory(
     List<ReadingHistoryModel> history,
   ) {
-    List<ReadingHistoryModel> result =
-        history;
+    List<ReadingHistoryModel> result = history;
 
     // SEARCH
     if (_searchQuery.trim().isNotEmpty) {
       final query =
-          _searchQuery
-              .trim()
-              .toLowerCase();
+          _searchQuery.trim().toLowerCase();
 
       result = result.where((book) {
         return book.title
@@ -122,18 +112,45 @@ class _ReadingHistoryScreenState
     if (label == 'Completed') {
       return result
           .where(
-            (book) =>
-                book.completed,
+            (book) => book.completed,
           )
           .toList();
     }
 
     return result
         .where(
-          (book) =>
-              book.status == label,
+          (book) => book.status == label,
         )
         .toList();
+  }
+
+  // ============================================================
+  // OPEN BOOK DETAILS
+  // ============================================================
+
+  void _openBookDetails(
+    ReadingHistoryModel historyBook,
+  ) {
+    final selectedBook = BookModel(
+      id: int.tryParse(historyBook.bookId) ?? 0,
+      title: historyBook.title,
+      author: historyBook.author,
+      imageUrl: historyBook.imageUrl,
+      downloadCount: 0,
+      textUrl: '',
+      description:
+          'Continue reading ${historyBook.title}.',
+      language: 'EN',
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookDetailsScreen(
+          book: selectedBook,
+        ),
+      ),
+    );
   }
 
   // ============================================================
@@ -145,8 +162,7 @@ class _ReadingHistoryScreenState
     BuildContext context,
   ) {
     return Scaffold(
-      backgroundColor:
-          Colors.white,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -167,25 +183,21 @@ class _ReadingHistoryScreenState
                         Navigator.maybePop(
                       context,
                     ),
-                    icon:
-                        const Icon(
+                    icon: const Icon(
                       Icons.arrow_back,
-                      color:
-                          Colors.black87,
+                      color: Colors.black87,
                     ),
                   ),
 
                   const Expanded(
                     child: Text(
                       'Reading History',
-                      textAlign:
-                          TextAlign.center,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight:
                             FontWeight.bold,
-                        color:
-                            Colors.black87,
+                        color: Colors.black87,
                       ),
                     ),
                   ),
@@ -197,12 +209,9 @@ class _ReadingHistoryScreenState
                               ReadingHistoryProvider>()
                           .refresh();
                     },
-                    icon:
-                        const Icon(
-                      Icons
-                          .refresh_rounded,
-                      color:
-                          Colors.black87,
+                    icon: const Icon(
+                      Icons.refresh_rounded,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
@@ -224,24 +233,17 @@ class _ReadingHistoryScreenState
                   horizontal: 14,
                   vertical: 4,
                 ),
-                decoration:
-                    BoxDecoration(
+                decoration: BoxDecoration(
                   color:
-                      const Color(
-                    0xFFF3F3F7,
-                  ),
+                      const Color(0xFFF3F3F7),
                   borderRadius:
-                      BorderRadius.circular(
-                    30,
-                  ),
+                      BorderRadius.circular(30),
                 ),
                 child: Row(
                   children: [
                     const Icon(
-                      Icons
-                          .search_rounded,
-                      color:
-                          Colors.grey,
+                      Icons.search_rounded,
+                      color: Colors.grey,
                       size: 20,
                     ),
 
@@ -250,8 +252,7 @@ class _ReadingHistoryScreenState
                     ),
 
                     Expanded(
-                      child:
-                          TextField(
+                      child: TextField(
                         onChanged: (value) {
                           setState(() {
                             _searchQuery =
@@ -261,16 +262,13 @@ class _ReadingHistoryScreenState
                         decoration:
                             const InputDecoration(
                           border:
-                              InputBorder
-                                  .none,
+                              InputBorder.none,
                           hintText:
                               'Search books...',
                           hintStyle:
                               TextStyle(
-                            color:
-                                Colors.grey,
-                            fontSize:
-                                13.5,
+                            color: Colors.grey,
+                            fontSize: 13.5,
                           ),
                         ),
                       ),
@@ -290,11 +288,9 @@ class _ReadingHistoryScreenState
 
             SizedBox(
               height: 38,
-              child:
-                  ListView.separated(
+              child: ListView.separated(
                 padding:
-                    const EdgeInsets
-                        .symmetric(
+                    const EdgeInsets.symmetric(
                   horizontal: 18,
                 ),
                 scrollDirection:
@@ -326,8 +322,7 @@ class _ReadingHistoryScreenState
                         AnimatedContainer(
                       duration:
                           const Duration(
-                        milliseconds:
-                            180,
+                        milliseconds: 180,
                       ),
                       padding:
                           const EdgeInsets
@@ -335,8 +330,7 @@ class _ReadingHistoryScreenState
                         horizontal: 16,
                       ),
                       alignment:
-                          Alignment
-                              .center,
+                          Alignment.center,
                       decoration:
                           BoxDecoration(
                         color: isSelected
@@ -346,24 +340,17 @@ class _ReadingHistoryScreenState
                               ),
                         borderRadius:
                             BorderRadius
-                                .circular(
-                          20,
-                        ),
+                                .circular(20),
                       ),
                       child: Text(
                         _filters[index],
-                        style:
-                            TextStyle(
+                        style: TextStyle(
                           color: isSelected
-                              ? Colors
-                                  .white
-                              : Colors
-                                  .black54,
+                              ? Colors.white
+                              : Colors.black54,
                           fontWeight:
-                              FontWeight
-                                  .w600,
-                          fontSize:
-                              12.5,
+                              FontWeight.w600,
+                          fontSize: 12.5,
                         ),
                       ),
                     ),
@@ -390,13 +377,11 @@ class _ReadingHistoryScreenState
                 ) {
                   // LOADING
                   if (provider.isLoading &&
-                      !provider
-                          .isInitialized) {
+                      !provider.isInitialized) {
                     return const Center(
                       child:
                           CircularProgressIndicator(
-                        color:
-                            _primary,
+                        color: _primary,
                       ),
                     );
                   }
@@ -409,11 +394,9 @@ class _ReadingHistoryScreenState
                   // EMPTY
                   if (history.isEmpty) {
                     return Center(
-                      child:
-                          Column(
+                      child: Column(
                         mainAxisSize:
-                            MainAxisSize
-                                .min,
+                            MainAxisSize.min,
                         children: [
                           Icon(
                             Icons
@@ -433,10 +416,8 @@ class _ReadingHistoryScreenState
                             style:
                                 TextStyle(
                               color:
-                                  Colors
-                                      .grey,
-                              fontSize:
-                                  14,
+                                  Colors.grey,
+                              fontSize: 14,
                               fontWeight:
                                   FontWeight
                                       .w500,
@@ -452,10 +433,8 @@ class _ReadingHistoryScreenState
                             style:
                                 TextStyle(
                               color:
-                                  Colors
-                                      .grey,
-                              fontSize:
-                                  12,
+                                  Colors.grey,
+                              fontSize: 12,
                             ),
                           ),
                         ],
@@ -465,13 +444,10 @@ class _ReadingHistoryScreenState
 
                   // LIST
                   return RefreshIndicator(
-                    color:
-                        _primary,
+                    color: _primary,
                     onRefresh:
-                        provider
-                            .refresh,
-                    child:
-                        ListView(
+                        provider.refresh,
+                    child: ListView(
                       padding:
                           const EdgeInsets
                               .symmetric(
@@ -498,29 +474,25 @@ class _ReadingHistoryScreenState
                               status:
                                   book.status,
                             ),
-                            onTap: () {
-                              final selectedBook = BookModel(
-                                id: int.tryParse(book.bookId) ?? 0,
-                                title: book.title,
-                                author: book.author,
-                                imageUrl: book.imageUrl,
-                                downloadCount: 0,
-                                textUrl: '',
-                                description:
-                                    'Continue reading ${book.title}.',
-                                language: 'EN',
-                              );
 
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      BookDetailsScreen(
-                                    book: selectedBook,
-                                  ),
-                                ),
+                            // ==================================================
+                            // BOOK CLICK
+                            // ==================================================
+                            //
+                            // Reading History
+                            //      ↓
+                            // BookDetailsScreen
+                            //      ↓
+                            // Read Now
+                            //      ↓
+                            // ReaderScreen
+                            //
+                            onTap: () {
+                              _openBookDetails(
+                                book,
                               );
                             },
+
                             onMenuTap: () {
                               _showBookMenu(
                                 context,
@@ -536,8 +508,7 @@ class _ReadingHistoryScreenState
                         Center(
                           child: Row(
                             mainAxisSize:
-                                MainAxisSize
-                                    .min,
+                                MainAxisSize.min,
                             children: [
                               Icon(
                                 Icons
@@ -547,9 +518,11 @@ class _ReadingHistoryScreenState
                                     .grey
                                     .shade400,
                               ),
+
                               const SizedBox(
                                 width: 6,
                               ),
+
                               Text(
                                 'History shows the last 50 books you read',
                                 style:
@@ -604,15 +577,12 @@ class _ReadingHistoryScreenState
                 MainAxisSize.min,
             children: [
               ListTile(
-                leading:
-                    const Icon(
+                leading: const Icon(
                   Icons
                       .delete_outline_rounded,
-                  color:
-                      Colors.red,
+                  color: Colors.red,
                 ),
-                title:
-                    const Text(
+                title: const Text(
                   'Remove from history',
                 ),
                 onTap: () async {

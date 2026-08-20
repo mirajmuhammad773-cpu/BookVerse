@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 class BookModel {
   final int id;
   final String title;

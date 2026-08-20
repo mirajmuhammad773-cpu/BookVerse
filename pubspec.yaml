@@ -33,6 +33,8 @@ dependencies:
   flutter_stripe: 
   cloud_functions:
 
+  shared_preferences:
+
    
 
   
@@ -58,7 +60,16 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
   assets:
     - asset/li.png
     - asset/book.png
-  #   - assets/icons/
+
+  fonts:
+    - family: BrittanySignature
+      fonts:
+        - asset: asset/Fonts/BrittanySignature.ttf
+
+    - family: Dancing
+      fonts:
+        - asset: asset/Fonts/Dancig.ttf

@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:bookverse/Auths/SignupScreen.dart';
 import 'package:bookverse/ViewModels/UserProvider.dart';
 import 'package:bookverse/Views/BooknaScreen.dart';

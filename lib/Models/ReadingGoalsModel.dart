@@ -4,6 +4,8 @@
 // DAY READING
 // ============================================================
 
+// ignore_for_file: file_names
+
 class DayReading {
   final String label;
   final int minutes;

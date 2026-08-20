@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -21,11 +23,13 @@ class AchievementRepository {
   }
 
   // ============================================================
-  // ACHIEVEMENT DOCUMENT
+  // DOCUMENT
   // ============================================================
 
   DocumentReference<Map<String, dynamic>>
-      _achievementDocument(String uid) {
+      _achievementDocument(
+    String uid,
+  ) {
     return _firestore
         .collection('users')
         .doc(uid)
@@ -34,20 +38,15 @@ class AchievementRepository {
   }
 
   // ============================================================
-  // SAVE ACHIEVEMENT DATA
+  // SAVE
   // ============================================================
 
   Future<void> saveAchievementData({
     required String userName,
     required int completedBooks,
     required int points,
-
-    // Unique IDs
     required Set<int> completedBookIds,
-
-    // Book titles for displaying in Achievement Screen
     required List<String> completedBookTitles,
-
     required Set<String> rewardedAchievementIds,
   }) async {
     final uid = currentUserId;
@@ -74,21 +73,20 @@ class AchievementRepository {
       'userName': userName,
 
       // ========================================================
-      // READING
+      // COMPLETED BOOKS
       // ========================================================
 
-      'completedBooks': completedBooks,
+      'completedBooks':
+          completedBooks,
 
-      // Keep IDs for unique book checking
       'completedBookIds':
           completedBookIds.toList(),
 
-      // Store titles for Achievement Screen
       'completedBookTitles':
           completedBookTitles,
 
       // ========================================================
-      // POINTS / REWARDS
+      // POINTS
       // ========================================================
 
       'points': points,
@@ -97,7 +95,7 @@ class AchievementRepository {
           rewardedAchievementIds.toList(),
 
       // ========================================================
-      // TIMESTAMPS
+      // TIME
       // ========================================================
 
       'updatedAt':
@@ -130,7 +128,8 @@ class AchievementRepository {
     }
 
     final snapshot =
-        await _achievementDocument(uid).get();
+        await _achievementDocument(uid)
+            .get();
 
     if (!snapshot.exists) {
       return null;
@@ -150,6 +149,7 @@ class AchievementRepository {
       return;
     }
 
-    await _achievementDocument(uid).delete();
+    await _achievementDocument(uid)
+        .delete();
   }
 }

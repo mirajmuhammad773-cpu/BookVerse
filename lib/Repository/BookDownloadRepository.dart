@@ -1,5 +1,7 @@
 // lib/Repository/DownloadRepository.dart
 
+// ignore_for_file: file_names
+
 import 'dart:io';
 
 import 'package:bookverse/Models/BookDownloadModel.dart';

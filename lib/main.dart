@@ -1,9 +1,15 @@
 import 'package:bookverse/Repository/Book-Repository.dart';
 
+// ============================================================
+// VIEW MODELS
+// ============================================================
+
 import 'package:bookverse/ViewModels/AchievementProvider.dart';
 import 'package:bookverse/ViewModels/Book-view-model.dart';
 import 'package:bookverse/ViewModels/BookDownloadProvider.dart';
 import 'package:bookverse/ViewModels/FavoriteBookProvider.dart';
+import 'package:bookverse/ViewModels/FontProvider.dart';
+import 'package:bookverse/ViewModels/BrightnessProvider.dart';
 import 'package:bookverse/ViewModels/PlansProvider.dart';
 import 'package:bookverse/ViewModels/ReadingGoalProvider.dart';
 import 'package:bookverse/ViewModels/ReadingHistoryProvider.dart';
@@ -12,9 +18,18 @@ import 'package:bookverse/ViewModels/UserProvider.dart';
 // ============================================================
 // PAYMENT PROVIDER
 // ============================================================
+
 import 'package:bookverse/ViewModels/PaymentProvider.dart';
 
+// ============================================================
+// SCREENS
+// ============================================================
+
 import 'package:bookverse/Views/SplashScreen.dart';
+
+// ============================================================
+// FLUTTER / FIREBASE / STRIPE
+// ============================================================
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -22,18 +37,53 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
+  // ==========================================================
+  // FLUTTER INITIALIZATION
+  // ==========================================================
+
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ==========================================================
+  // FIREBASE
+  // ==========================================================
+
   await Firebase.initializeApp();
+
+  // ==========================================================
+  // STRIPE
+  // ==========================================================
 
   Stripe.publishableKey =
       'pk_test_51U5hLcGlv6wZRQSOpP5hyPSsihYL1D6wJatkxE3FsDma1gBZikvql6tCvOIh40sdw2tuHxJlCXBRFPQa1XlmLBVi00GWxpD1aB';
 
   await Stripe.instance.applySettings();
 
+  // ==========================================================
+  // RUN APP
+  // ==========================================================
+
   runApp(
     MultiProvider(
       providers: [
+
+        // ======================================================
+        // FONT PROVIDER
+        // ======================================================
+
+        ChangeNotifierProvider(
+          create: (_) => FontProvider()
+            ..loadFontPreference(),
+        ),
+
+        // ======================================================
+        // BRIGHTNESS PROVIDER
+        // ======================================================
+
+        ChangeNotifierProvider(
+          create: (_) => BrightnessProvider()
+            ..loadBrightnessPreference(),
+        ),
+
         // ======================================================
         // PLANS PROVIDER
         // ======================================================
@@ -59,7 +109,7 @@ void main() async {
         ),
 
         // ======================================================
-        // READING HISTORY
+        // READING HISTORY PROVIDER
         // ======================================================
 
         ChangeNotifierProvider(
@@ -67,7 +117,7 @@ void main() async {
         ),
 
         // ======================================================
-        // READING GOAL
+        // READING GOAL PROVIDER
         // ======================================================
 
         ChangeNotifierProvider(
@@ -114,6 +164,10 @@ void main() async {
   );
 }
 
+// ============================================================
+// MY APP
+// ============================================================
+
 class MyApp extends StatelessWidget {
   const MyApp({
     super.key,
@@ -121,14 +175,41 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    // ========================================================
+    // FONT PROVIDER
+    // ========================================================
+
+    final FontProvider fontProvider =
+        context.watch<FontProvider>();
+
+    // ========================================================
+    // MATERIAL APP
+    // ========================================================
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
       title: 'BookVerse',
 
+      // ======================================================
+      // GLOBAL THEME
+      // ======================================================
+
       theme: ThemeData(
         useMaterial3: true,
+
+        // ====================================================
+        // GLOBAL FONT
+        // ====================================================
+
+        fontFamily:
+            fontProvider.selectedFont,
       ),
+
+      // ======================================================
+      // SPLASH SCREEN
+      // ======================================================
 
       home: const BookVerseSplashScreen(),
     );

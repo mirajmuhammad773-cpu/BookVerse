@@ -131,42 +131,115 @@ class StatMini {
   final Color color;
   final String value;
   final String label;
-  const StatMini({required this.icon, required this.color, required this.value, required this.label});
+
+  const StatMini({
+    required this.icon,
+    required this.color,
+    required this.value,
+    required this.label,
+  });
 }
 
 class ReadingStatsRow extends StatelessWidget {
   final List<StatMini> stats;
-  const ReadingStatsRow({super.key, required this.stats});
+
+  const ReadingStatsRow({
+    super.key,
+    required this.stats,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int i = 0; i < stats.length; i++) ...[
-          if (i != 0) const SizedBox(width: 10),
-          Expanded(child: _card(stats[i])),
+          if (i != 0)
+            const SizedBox(width: 10),
+
+          Expanded(
+            child: _card(stats[i]),
+          ),
         ],
       ],
     );
   }
 
   Widget _card(StatMini s) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-      decoration: BoxDecoration(color: s.color.withOpacity(0.08), borderRadius: BorderRadius.circular(14)),
-      child: Column(
-        children: [
-          Icon(s.icon, color: s.color, size: 18),
-          const SizedBox(height: 6),
-          Text(s.value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
-          const SizedBox(height: 2),
-          Text(s.label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 9.5, color: Colors.grey)),
-        ],
+    return SizedBox(
+      height: 105, // All cards same fixed height
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          vertical: 14,
+          horizontal: 8,
+        ),
+        decoration: BoxDecoration(
+          color: s.color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // ==================================================
+            // ICON
+            // ==================================================
+
+            SizedBox(
+              height: 20,
+              child: Icon(
+                s.icon,
+                color: s.color,
+                size: 18,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // ==================================================
+            // VALUE
+            // ==================================================
+
+            SizedBox(
+              height: 20,
+              child: Text(
+                s.value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 2),
+
+            // ==================================================
+            // LABEL
+            // ==================================================
+
+            SizedBox(
+              height: 24,
+              child: Text(
+                s.label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 9.5,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
-
 // ============================================================
 // 3) Set Reading Goals card - period tabs + daily progress
 // ============================================================
@@ -396,30 +469,68 @@ class ReadingChallengesCard extends StatelessWidget {
   final List<ReadingChallenge> challenges;
   final VoidCallback? onViewAll;
 
-  const ReadingChallengesCard({super.key, required this.challenges, this.onViewAll});
+  const ReadingChallengesCard({
+    super.key,
+    required this.challenges,
+    this.onViewAll,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: Colors.grey.shade200)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.grey.shade200,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
             children: [
-              Row(children: const [
-                Icon(Icons.emoji_events_rounded, color: goalsPurple, size: 18),
-                SizedBox(width: 8),
-                Text('Reading Challenges', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)),
-              ]),
+              Row(
+                children: const [
+                  Icon(
+                    Icons.emoji_events_rounded,
+                    color: goalsPurple,
+                    size: 18,
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'Reading Challenges',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
               GestureDetector(
                 onTap: onViewAll,
-                child: Row(mainAxisSize: MainAxisSize.min, children: const [
-                  Text('View All', style: TextStyle(color: goalsPurple, fontSize: 12, fontWeight: FontWeight.w600)),
-                  Icon(Icons.chevron_right_rounded, color: goalsPurple, size: 16),
-                ]),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Text(
+                      'View All',
+                      style: TextStyle(
+                        color: goalsPurple,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: goalsPurple,
+                      size: 16,
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -427,8 +538,14 @@ class ReadingChallengesCard extends StatelessWidget {
           Row(
             children: [
               for (int i = 0; i < challenges.length; i++) ...[
-                if (i != 0) const SizedBox(width: 10),
-                Expanded(child: _challengeTile(challenges[i], i)),
+                if (i != 0)
+                  const SizedBox(width: 10),
+                Expanded(
+                  child: _challengeTile(
+                    challenges[i],
+                    i,
+                  ),
+                ),
               ],
             ],
           ),
@@ -449,44 +566,100 @@ class ReadingChallengesCard extends StatelessWidget {
     return palette[index % palette.length];
   }
 
-  Widget _challengeTile(ReadingChallenge c, int index) {
-    final accentColor = _challengeColor(index);
-    final progress = c.target == 0 ? 0.0 : (c.current / c.target).clamp(0.0, 1.0);
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: accentColor.withOpacity(0.08), borderRadius: BorderRadius.circular(14)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (c.completed)
-            Container(
-              width: 26,
-              height: 26,
-              decoration: const BoxDecoration(color: Color(0xFF2E7D32), shape: BoxShape.circle),
-              child: const Icon(Icons.check_rounded, color: Colors.white, size: 15),
-            )
-          else
-            Icon(Icons.menu_book_rounded, color: accentColor, size: 18),
-          const SizedBox(height: 8),
-          Text(c.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11.5, color: Colors.black87)),
-          const SizedBox(height: 2),
-          if (c.completed)
-            const Text('Completed', style: TextStyle(fontSize: 10, color: Colors.grey))
-          else ...[
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 5,
-                backgroundColor: Colors.grey.shade200,
-                valueColor: AlwaysStoppedAnimation(accentColor),
+  Widget _challengeTile(
+    ReadingChallenge c,
+    int index,
+  ) {
+    final accentColor =
+        _challengeColor(index);
+
+    final progress = c.target == 0
+        ? 0.0
+        : (c.current / c.target)
+            .clamp(0.0, 1.0);
+
+    return SizedBox(
+      height: 125,
+      width: double.infinity,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color:
+              accentColor.withOpacity(0.08),
+          borderRadius:
+              BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            if (c.completed)
+              Container(
+                width: 26,
+                height: 26,
+                decoration:
+                    const BoxDecoration(
+                  color: Color(0xFF2E7D32),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_rounded,
+                  color: Colors.white,
+                  size: 15,
+                ),
+              )
+            else
+              Icon(
+                Icons.menu_book_rounded,
+                color: accentColor,
+                size: 18,
+              ),
+            const SizedBox(height: 8),
+            Text(
+              c.title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 11.5,
+                color: Colors.black87,
               ),
             ),
-            const SizedBox(height: 4),
-            Text('${c.current} / ${c.target}', style: const TextStyle(fontSize: 10, color: Colors.grey)),
+            const SizedBox(height: 2),
+            if (c.completed)
+              const Text(
+                'Completed',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey,
+                ),
+              )
+            else ...[
+              const SizedBox(height: 6),
+              ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(6),
+                child:
+                    LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 5,
+                  backgroundColor:
+                      Colors.grey.shade200,
+                  valueColor:
+                      AlwaysStoppedAnimation(
+                    accentColor,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${c.current} / ${c.target}',
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

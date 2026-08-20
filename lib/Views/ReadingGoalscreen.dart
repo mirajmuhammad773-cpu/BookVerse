@@ -1,12 +1,12 @@
-// lib/Screens/ReadingGoalsScreen.dart
-
 import 'package:bookverse/ViewModels/ReadingGoalProvider.dart';
 import 'package:bookverse/Widgets/ReadingGoalwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class ReadingGoalsScreen extends StatefulWidget {
-  const ReadingGoalsScreen({super.key});
+  const ReadingGoalsScreen({
+    super.key,
+  });
 
   @override
   State<ReadingGoalsScreen> createState() =>
@@ -33,7 +33,9 @@ class _ReadingGoalsScreenState
   // ============================================================
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Consumer<ReadingGoalProvider>(
       builder: (
         context,
@@ -101,8 +103,7 @@ class _ReadingGoalsScreenState
                     child: Center(
                       child:
                           CircularProgressIndicator(
-                        color:
-                            goalsPurple,
+                        color: goalsPurple,
                       ),
                     ),
                   )
@@ -122,8 +123,7 @@ class _ReadingGoalsScreenState
                         physics:
                             const AlwaysScrollableScrollPhysics(),
                         padding:
-                            const EdgeInsets
-                                .fromLTRB(
+                            const EdgeInsets.fromLTRB(
                           16,
                           0,
                           16,
@@ -138,13 +138,13 @@ class _ReadingGoalsScreenState
                               null)
                             Container(
                               margin:
-                                  const EdgeInsets
-                                      .only(
+                                  const EdgeInsets.only(
                                 bottom: 12,
                               ),
                               padding:
-                                  const EdgeInsets
-                                      .all(12),
+                                  const EdgeInsets.all(
+                                12,
+                              ),
                               decoration:
                                   BoxDecoration(
                                 color: Colors.red
@@ -163,8 +163,7 @@ class _ReadingGoalsScreenState
                                     provider
                                         .errorMessage!,
                                     textAlign:
-                                        TextAlign
-                                            .center,
+                                        TextAlign.center,
                                     style:
                                         const TextStyle(
                                       color:
@@ -275,8 +274,7 @@ class _ReadingGoalsScreenState
                           // ==================================================
 
                           SetGoalsCard(
-                            periods:
-                                periods,
+                            periods: periods,
 
                             selectedPeriod:
                                 selectedPeriod,
@@ -362,8 +360,9 @@ class _ReadingGoalsScreenState
 
                           Container(
                             padding:
-                                const EdgeInsets
-                                    .all(16),
+                                const EdgeInsets.all(
+                              16,
+                            ),
                             decoration:
                                 BoxDecoration(
                               color: goalsPurple
@@ -382,17 +381,14 @@ class _ReadingGoalsScreenState
                                 Text(
                                   '"Today a reader, tomorrow a leader."',
                                   textAlign:
-                                      TextAlign
-                                          .center,
+                                      TextAlign.center,
                                   style:
                                       TextStyle(
                                     fontStyle:
-                                        FontStyle
-                                            .italic,
+                                        FontStyle.italic,
                                     fontSize: 13,
                                     color:
-                                        Colors
-                                            .black87,
+                                        Colors.black87,
                                   ),
                                 ),
 
@@ -581,8 +577,7 @@ class _ReadingGoalsScreenState
                   children: [
                     Container(
                       padding:
-                          const EdgeInsets
-                              .all(9),
+                          const EdgeInsets.all(9),
                       decoration:
                           BoxDecoration(
                         color:
@@ -631,8 +626,7 @@ class _ReadingGoalsScreenState
                       },
                       icon:
                           const Icon(
-                        Icons
-                            .close_rounded,
+                        Icons.close_rounded,
                       ),
                     ),
                   ],
@@ -646,8 +640,7 @@ class _ReadingGoalsScreenState
                 // WEEK DATA
                 // ==================================================
 
-                ...provider.weeklyData
-                    .map(
+                ...provider.weeklyData.map(
                   (day) {
                     return Padding(
                       padding:
@@ -666,8 +659,7 @@ class _ReadingGoalsScreenState
                                 fontWeight:
                                     FontWeight
                                         .w600,
-                                fontSize:
-                                    13,
+                                fontSize: 13,
                               ),
                             ),
                           ),
@@ -682,19 +674,18 @@ class _ReadingGoalsScreenState
                               ),
                               child:
                                   LinearProgressIndicator(
-                                value:
-                                    provider.weeklyReadingTarget >
-                                            0
-                                        ? (day.minutes /
-                                                provider
-                                                    .weeklyReadingTarget)
-                                            .clamp(
-                                            0.0,
-                                            1.0,
-                                          )
-                                        : 0,
-                                minHeight:
-                                    7,
+                                value: provider
+                                            .weeklyReadingTarget >
+                                        0
+                                    ? (day.minutes /
+                                            provider
+                                                .weeklyReadingTarget)
+                                        .clamp(
+                                        0.0,
+                                        1.0,
+                                      )
+                                    : 0,
+                                minHeight: 7,
                                 backgroundColor:
                                     Colors.grey
                                         .withOpacity(
@@ -712,16 +703,14 @@ class _ReadingGoalsScreenState
 
                           SizedBox(
                             width: 42,
-                            child:
-                                Text(
+                            child: Text(
                               '${day.minutes}m',
                               textAlign:
                                   TextAlign
                                       .right,
                               style:
                                   const TextStyle(
-                                fontSize:
-                                    12,
+                                fontSize: 12,
                                 fontWeight:
                                     FontWeight
                                         .w600,

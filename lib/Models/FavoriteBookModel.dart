@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:bookverse/Models/BookModel.dart';
 
 class FavoriteBookModel {

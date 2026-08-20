@@ -1,6 +1,5 @@
-// lib/Screens/AchievementScreen.dart
-
 import 'package:bookverse/ViewModels/AchievementProvider.dart';
+import 'package:bookverse/ViewModels/ReadingGoalProvider.dart';
 import 'package:bookverse/Widgets/Achievementwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -51,12 +50,18 @@ class _AchievementScreenState
 
   List<dynamic> _filteredAchievements(
     AchievementProvider provider,
+    ReadingGoalProvider readingGoalProvider,
   ) {
+    final achievements =
+        provider.getAchievementsWithStreak(
+      readingGoalProvider.currentStreakDays,
+    );
+
     if (_selectedCategory == 'All') {
-      return provider.achievements;
+      return achievements;
     }
 
-    return provider.achievements
+    return achievements
         .where(
           (achievement) =>
               achievement.category ==
@@ -219,9 +224,7 @@ class _AchievementScreenState
                     height: 38,
                     decoration: BoxDecoration(
                       color:
-                          const Color(
-                        0xFFEFFAF1,
-                      ),
+                          const Color(0xFFEFFAF1),
                       borderRadius:
                           BorderRadius.circular(
                         11,
@@ -258,8 +261,7 @@ class _AchievementScreenState
                   ),
                   trailing:
                       const Icon(
-                    Icons
-                        .check_circle_rounded,
+                    Icons.check_circle_rounded,
                     color:
                         Color(0xFF4CAF50),
                     size: 20,
@@ -281,15 +283,19 @@ class _AchievementScreenState
   Widget build(
     BuildContext context,
   ) {
-    return Consumer<AchievementProvider>(
+    return Consumer2<
+        AchievementProvider,
+        ReadingGoalProvider>(
       builder: (
         context,
         provider,
+        readingGoalProvider,
         child,
       ) {
         final achievements =
             _filteredAchievements(
           provider,
+          readingGoalProvider,
         );
 
         return Scaffold(
@@ -339,8 +345,7 @@ class _AchievementScreenState
                       },
                       child: ListView(
                         padding:
-                            const EdgeInsets
-                                .only(
+                            const EdgeInsets.only(
                           top: 4,
                           bottom: 25,
                         ),
@@ -416,8 +421,7 @@ class _AchievementScreenState
                                 provider
                                     .errorMessage!,
                                 textAlign:
-                                    TextAlign
-                                        .center,
+                                    TextAlign.center,
                                 style:
                                     const TextStyle(
                                   color:
@@ -447,8 +451,7 @@ class _AchievementScreenState
                                         Color(
                                       0xFF666B82,
                                     ),
-                                    fontSize:
-                                        14,
+                                    fontSize: 14,
                                   ),
                                 ),
                               ),

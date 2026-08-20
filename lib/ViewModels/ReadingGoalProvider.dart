@@ -1,5 +1,3 @@
-// lib/ViewModels/ReadingGoalProvider.dart
-
 import 'package:bookverse/Models/BookModel.dart';
 import 'package:bookverse/Models/ReadingGoalsModel.dart';
 import 'package:bookverse/Repository/ReadingGoalRepository.dart';
@@ -174,6 +172,10 @@ class ReadingGoalProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       _isInitialized = true;
+
+      debugPrint(
+        'Reading goals load error: $e',
+      );
     } finally {
       _isLoading = false;
 
@@ -189,28 +191,67 @@ class ReadingGoalProvider extends ChangeNotifier {
     ReadingGoalModel model,
   ) {
     final today =
-        _dateKey(DateTime.now());
+        _dateKey(
+      DateTime.now(),
+    );
 
-    if (model.lastReadingDate != null &&
-        model.lastReadingDate != today) {
+    final yesterday =
+        _dateKey(
+      DateTime.now().subtract(
+        const Duration(days: 1),
+      ),
+    );
+
+    final lastReadingDate =
+        model.lastReadingDate;
+
+    // ==========================================================
+    // NO READING HISTORY
+    // ==========================================================
+
+    if (lastReadingDate == null ||
+        lastReadingDate.isEmpty) {
       return _recalculateData(
         model.copyWith(
           dailyGoalCurrent: 0,
-          lastReadingDate: today,
+          currentStreakDays: 0,
         ),
       );
     }
 
-    if (model.lastReadingDate == null) {
+    // ==========================================================
+    // USER ALREADY READ TODAY
+    // ==========================================================
+
+    if (lastReadingDate == today) {
+      return _recalculateData(
+        model,
+      );
+    }
+
+    // ==========================================================
+    // USER READ YESTERDAY
+    //
+    // Streak remains active and can continue today.
+    // ==========================================================
+
+    if (lastReadingDate == yesterday) {
       return _recalculateData(
         model.copyWith(
-          lastReadingDate: today,
+          dailyGoalCurrent: 0,
         ),
       );
     }
 
+    // ==========================================================
+    // USER MISSED ONE OR MORE DAYS
+    // ==========================================================
+
     return _recalculateData(
-      model,
+      model.copyWith(
+        dailyGoalCurrent: 0,
+        currentStreakDays: 0,
+      ),
     );
   }
 
@@ -225,7 +266,9 @@ class ReadingGoalProvider extends ChangeNotifier {
       completedBookIds: const [],
       totalReadingMinutes: 0,
       lastReadingDate:
-          _dateKey(DateTime.now()),
+          _dateKey(
+        DateTime.now(),
+      ),
       currentStreakDays: 0,
       monthlyGoalCurrent: 0,
       monthlyGoalTarget: 5,
@@ -294,7 +337,6 @@ class ReadingGoalProvider extends ChangeNotifier {
   void startReadingSession({
     BookModel? book,
   }) {
-    // Already running.
     if (_sessionStartTime != null) {
       return;
     }
@@ -313,10 +355,6 @@ class ReadingGoalProvider extends ChangeNotifier {
     BookModel? book,
     required int minutes,
   }) async {
-    // ----------------------------------------------------------
-    // Prevent duplicate saves.
-    // ----------------------------------------------------------
-
     if (_sessionSaving) {
       return;
     }
@@ -342,27 +380,14 @@ class ReadingGoalProvider extends ChangeNotifier {
       }
     }
 
-    // ----------------------------------------------------------
-    // Clear session BEFORE saving.
-    //
-    // This is important because if Firebase takes time,
-    // another lifecycle callback must not save the same session.
-    // ----------------------------------------------------------
-
     _sessionStartTime = null;
 
     _sessionSaving = true;
 
     try {
-      // --------------------------------------------------------
-      // Ignore sessions shorter than one complete minute.
-      // --------------------------------------------------------
-
       if (actualMinutes <= 0) {
         return;
       }
-
-     
 
       await addReadingTime(
         actualMinutes,
@@ -389,13 +414,16 @@ class ReadingGoalProvider extends ChangeNotifier {
     final todayDate =
         _dateKey(now);
 
+    final previousReadingDate =
+        _data.lastReadingDate;
+
     // ==========================================================
     // DAILY READING
     // ==========================================================
 
     int todayMinutes;
 
-    if (_data.lastReadingDate ==
+    if (previousReadingDate ==
         todayDate) {
       todayMinutes =
           _data.dailyGoalCurrent +
@@ -429,6 +457,7 @@ class ReadingGoalProvider extends ChangeNotifier {
     final newStreak =
         _calculateStreak(
       todayMinutes,
+      previousReadingDate,
     );
 
     // ==========================================================
@@ -457,13 +486,13 @@ class ReadingGoalProvider extends ChangeNotifier {
     );
 
     // ==========================================================
-    // UPDATE UI IMMEDIATELY
+    // UPDATE UI
     // ==========================================================
 
     notifyListeners();
 
     // ==========================================================
-    // SAVE TO FIREBASE
+    // SAVE FIREBASE
     // ==========================================================
 
     await _save();
@@ -483,18 +512,10 @@ class ReadingGoalProvider extends ChangeNotifier {
     final cleanBookId =
         bookId.trim();
 
-    // ----------------------------------------------------------
-    // ALREADY COMPLETED
-    // ----------------------------------------------------------
-
     if (_data.completedBookIds
         .contains(cleanBookId)) {
       return true;
     }
-
-    // ----------------------------------------------------------
-    // COPY IDS
-    // ----------------------------------------------------------
 
     final updatedIds =
         List<String>.from(
@@ -505,10 +526,6 @@ class ReadingGoalProvider extends ChangeNotifier {
       cleanBookId,
     );
 
-    // ----------------------------------------------------------
-    // UPDATE
-    // ----------------------------------------------------------
-
     _data = _data.copyWith(
       booksRead:
           _data.booksRead + 1,
@@ -518,19 +535,11 @@ class ReadingGoalProvider extends ChangeNotifier {
           _data.monthlyGoalCurrent + 1,
     );
 
-    // ----------------------------------------------------------
-    // CHALLENGES
-    // ----------------------------------------------------------
-
     _data = _recalculateData(
       _data,
     );
 
     notifyListeners();
-
-    // ----------------------------------------------------------
-    // FIREBASE
-    // ----------------------------------------------------------
 
     return await _save();
   }
@@ -643,10 +652,6 @@ class ReadingGoalProvider extends ChangeNotifier {
       }
     }
 
-    // ----------------------------------------------------------
-    // Safety fallback
-    // ----------------------------------------------------------
-
     if (!found) {
       updated.add(
         DayReading(
@@ -754,16 +759,65 @@ class ReadingGoalProvider extends ChangeNotifier {
 
   int _calculateStreak(
     int todayMinutes,
+    String? previousReadingDate,
   ) {
     if (todayMinutes <= 0) {
       return _data.currentStreakDays;
     }
 
-    if (_data.currentStreakDays <= 0) {
+    final today =
+        _dateKey(
+      DateTime.now(),
+    );
+
+    final yesterday =
+        _dateKey(
+      DateTime.now().subtract(
+        const Duration(days: 1),
+      ),
+    );
+
+    // ==========================================================
+    // FIRST READING DAY
+    // ==========================================================
+
+    if (previousReadingDate == null ||
+        previousReadingDate.isEmpty) {
       return 1;
     }
 
-    return _data.currentStreakDays;
+    // ==========================================================
+    // ALREADY READ TODAY
+    //
+    // Same day multiple reading sessions should not increase
+    // the streak.
+    // ==========================================================
+
+    if (previousReadingDate == today) {
+      if (_data.currentStreakDays <= 0) {
+        return 1;
+      }
+
+      return _data.currentStreakDays;
+    }
+
+    // ==========================================================
+    // READ YESTERDAY
+    //
+    // Consecutive day -> increase streak.
+    // ==========================================================
+
+    if (previousReadingDate == yesterday) {
+      return _data.currentStreakDays + 1;
+    }
+
+    // ==========================================================
+    // MISSED DAY
+    //
+    // Start a new streak.
+    // ==========================================================
+
+    return 1;
   }
 
   // ============================================================
@@ -869,10 +923,6 @@ class ReadingGoalProvider extends ChangeNotifier {
   Future<void> resetDailyGoal() async {
     _data = _data.copyWith(
       dailyGoalCurrent: 0,
-      lastReadingDate:
-          _dateKey(
-        DateTime.now(),
-      ),
     );
 
     notifyListeners();
@@ -905,13 +955,6 @@ class ReadingGoalProvider extends ChangeNotifier {
 
   // ============================================================
   // FORCE SAVE CURRENT SESSION
-  // ============================================================
-  //
-  // Optional helper.
-  // ReaderScreen normally calls saveReadingSession().
-  //
-  // This method can also be used if another screen needs to
-  // safely close the current reading session.
   // ============================================================
 
   Future<void> finishReadingSession({
