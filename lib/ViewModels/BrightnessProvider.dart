@@ -13,23 +13,23 @@ class BrightnessProvider extends ChangeNotifier {
   // BRIGHTNESS MODES
   // ============================================================
 
-  static const String normal = 'Normal';
-  static const String low = 'Low';
-  static const String medium = 'Medium';
   static const String high = 'High';
+  static const String normal = 'Normal';
+  static const String medium = 'Medium';
+  static const String low = 'Low';
 
   static const List<String> availableBrightnessModes = [
-    normal,
-    low,
-    medium,
     high,
+    normal,
+    medium,
+    low,
   ];
 
   // ============================================================
   // DEFAULT VALUE
   // ============================================================
 
-  String _brightnessMode = normal;
+  String _brightnessMode = high;
 
   // ============================================================
   // GETTER
@@ -76,10 +76,10 @@ class BrightnessProvider extends ChangeNotifier {
           )) {
         _brightnessMode = savedMode;
       } else {
-        _brightnessMode = normal;
+        _brightnessMode = high;
       }
     } catch (e) {
-      _brightnessMode = normal;
+      _brightnessMode = high;
 
       debugPrint(
         'Brightness preference load error: $e',
@@ -125,14 +125,14 @@ class BrightnessProvider extends ChangeNotifier {
   // ============================================================
 
   bool get isNormal =>
-      _brightnessMode == normal;
+      _brightnessMode == high;
 
   bool get isLow =>
-      _brightnessMode == low;
+      _brightnessMode == normal;
 
   bool get isMedium =>
       _brightnessMode == medium;
 
   bool get isHigh =>
-      _brightnessMode == high;
+      _brightnessMode == low;
 }

@@ -1,6 +1,6 @@
-import 'package:bookverse/ViewModels/PlansProvider.dart';
-import 'package:bookverse/Views/Paymentscreen.dart';
-import 'package:bookverse/Widgets/Planscardwidget.dart';
+import 'package:BookVerse/ViewModels/PlansProvider.dart';
+import 'package:BookVerse/Views/Paymentscreen.dart';
+import 'package:BookVerse/Widgets/Planscardwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

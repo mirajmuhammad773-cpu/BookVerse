@@ -2,15 +2,15 @@
 
 // ignore_for_file: file_names, prefer_const_constructors
 
-import 'package:bookverse/Views/AchievementsScreen.dart';
-import 'package:bookverse/Views/DownloadBook.dart';
-import 'package:bookverse/Views/PaymentHistory.dart';
-import 'package:bookverse/Views/ReadingGoalscreen.dart';
-import 'package:bookverse/Views/ReadingHistory.dart';
-import 'package:bookverse/Views/SettingScreen.dart';
-import 'package:bookverse/ViewModels/FavoriteBookProvider.dart';
-import 'package:bookverse/ViewModels/ReadingGoalProvider.dart';
-import 'package:bookverse/Widgets/Profilewidget.dart';
+import 'package:BookVerse/Views/AchievementsScreen.dart';
+import 'package:BookVerse/Views/DownloadBook.dart';
+import 'package:BookVerse/Views/PaymentHistory.dart';
+import 'package:BookVerse/Views/ReadingGoalscreen.dart';
+import 'package:BookVerse/Views/ReadingHistory.dart';
+import 'package:BookVerse/Views/SettingScreen.dart';
+import 'package:BookVerse/ViewModels/FavoriteBookProvider.dart';
+import 'package:BookVerse/ViewModels/ReadingGoalProvider.dart';
+import 'package:BookVerse/Widgets/Profilewidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

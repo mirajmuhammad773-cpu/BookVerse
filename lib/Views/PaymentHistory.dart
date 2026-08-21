@@ -1,4 +1,4 @@
-import 'package:bookverse/Widgets/PaymentHistoryWidget.dart';
+import 'package:BookVerse/Widgets/PaymentHistoryWidget.dart';
 import 'package:flutter/material.dart';
 
 class PaymentHistoryScreen extends StatefulWidget {

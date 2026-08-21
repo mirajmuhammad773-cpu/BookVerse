@@ -1,7 +1,7 @@
 // ignore_for_file: file_names
 
-import 'package:bookverse/ViewModels/UserProvider.dart';
-import 'package:bookverse/Views/BooknaScreen.dart';
+import 'package:BookVerse/ViewModels/UserProvider.dart';
+import 'package:BookVerse/Views/BooknaScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

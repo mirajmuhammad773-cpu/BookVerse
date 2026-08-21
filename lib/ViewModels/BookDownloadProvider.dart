@@ -1,8 +1,8 @@
 // lib/ViewModels/DownloadProvider.dart
 
-import 'package:bookverse/Models/BookDownloadModel.dart';
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/Repository/BookDownloadRepository.dart';
+import 'package:BookVerse/Models/BookDownloadModel.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/Repository/BookDownloadRepository.dart';
 import 'package:flutter/foundation.dart';
 
 class DownloadProvider

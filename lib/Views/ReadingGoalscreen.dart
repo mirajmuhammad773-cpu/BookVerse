@@ -1,5 +1,5 @@
-import 'package:bookverse/ViewModels/ReadingGoalProvider.dart';
-import 'package:bookverse/Widgets/ReadingGoalwidget.dart';
+import 'package:BookVerse/ViewModels/ReadingGoalProvider.dart';
+import 'package:BookVerse/Widgets/ReadingGoalwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

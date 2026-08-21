@@ -60,52 +60,238 @@ class AchievementRepository {
     final document =
         _achievementDocument(uid);
 
+    // ========================================================
+    // LOAD EXISTING DATA FIRST
+    // ========================================================
+
     final existing =
         await document.get();
 
-    final data = <String, dynamic>{
+    final existingData =
+        existing.data();
+
+    // ========================================================
+    // EXISTING COUNT
+    // ========================================================
+
+    int existingCompletedBooks = 0;
+
+    if (existingData != null) {
+      final value =
+          existingData['completedBooks'];
+
+      if (value is num) {
+        existingCompletedBooks =
+            value.toInt();
+      } else {
+        existingCompletedBooks =
+            int.tryParse(
+                  value?.toString() ??
+                      '0',
+                ) ??
+                0;
+      }
+    }
+
+    // ========================================================
+    // NEVER DECREASE LIFETIME COUNT
+    // ========================================================
+
+    final finalCompletedBooks =
+        completedBooks >
+                existingCompletedBooks
+            ? completedBooks
+            : existingCompletedBooks;
+
+    // ========================================================
+    // MERGE BOOK IDS
+    //
+    // Existing Firebase IDs + new IDs
+    // ========================================================
+
+    final Set<int> mergedBookIds =
+        <int>{};
+
+    if (existingData != null) {
+      final oldIds =
+          existingData['completedBookIds'];
+
+      if (oldIds is List) {
+        for (final value in oldIds) {
+          final id = int.tryParse(
+            value.toString(),
+          );
+
+          if (id != null) {
+            mergedBookIds.add(id);
+          }
+        }
+      }
+    }
+
+    mergedBookIds.addAll(
+      completedBookIds,
+    );
+
+    // ========================================================
+    // MERGE BOOK TITLES
+    // ========================================================
+
+    final List<String> mergedBookTitles =
+        <String>[];
+
+    if (existingData != null) {
+      final oldTitles =
+          existingData[
+              'completedBookTitles'];
+
+      if (oldTitles is List) {
+        for (final value in oldTitles) {
+          final title =
+              value.toString().trim();
+
+          if (title.isNotEmpty &&
+              !mergedBookTitles
+                  .contains(title)) {
+            mergedBookTitles.add(
+              title,
+            );
+          }
+        }
+      }
+    }
+
+    for (final title
+        in completedBookTitles) {
+      final cleanTitle =
+          title.trim();
+
+      if (cleanTitle.isNotEmpty &&
+          !mergedBookTitles
+              .contains(cleanTitle)) {
+        mergedBookTitles.add(
+          cleanTitle,
+        );
+      }
+    }
+
+    // ========================================================
+    // MERGE REWARDED ACHIEVEMENTS
+    // ========================================================
+
+    final Set<String>
+        mergedRewardedAchievements =
+        <String>{};
+
+    if (existingData != null) {
+      final oldRewards =
+          existingData[
+              'rewardedAchievementIds'];
+
+      if (oldRewards is List) {
+        for (final value in oldRewards) {
+          final id =
+              value.toString().trim();
+
+          if (id.isNotEmpty) {
+            mergedRewardedAchievements
+                .add(id);
+          }
+        }
+      }
+    }
+
+    mergedRewardedAchievements
+        .addAll(
+      rewardedAchievementIds,
+    );
+
+    // ========================================================
+    // EXISTING POINTS
+    // ========================================================
+
+    int existingPoints = 0;
+
+    if (existingData != null) {
+      final value =
+          existingData['points'];
+
+      if (value is num) {
+        existingPoints =
+            value.toInt();
+      } else {
+        existingPoints =
+            int.tryParse(
+                  value?.toString() ??
+                      '0',
+                ) ??
+                0;
+      }
+    }
+
+    // Points should never decrease accidentally.
+    final finalPoints =
+        points > existingPoints
+            ? points
+            : existingPoints;
+
+    // ========================================================
+    // FINAL DATA
+    // ========================================================
+
+    final data =
+        <String, dynamic>{
       'uid': uid,
 
-      // ========================================================
+      // ======================================================
       // USER
-      // ========================================================
+      // ======================================================
 
       'userName': userName,
 
-      // ========================================================
+      // ======================================================
       // COMPLETED BOOKS
-      // ========================================================
+      // ======================================================
 
       'completedBooks':
-          completedBooks,
+          finalCompletedBooks,
 
       'completedBookIds':
-          completedBookIds.toList(),
+          mergedBookIds.toList(),
 
       'completedBookTitles':
-          completedBookTitles,
+          mergedBookTitles,
 
-      // ========================================================
+      // ======================================================
       // POINTS
-      // ========================================================
+      // ======================================================
 
-      'points': points,
+      'points': finalPoints,
 
       'rewardedAchievementIds':
-          rewardedAchievementIds.toList(),
+          mergedRewardedAchievements
+              .toList(),
 
-      // ========================================================
+      // ======================================================
       // TIME
-      // ========================================================
+      // ======================================================
 
       'updatedAt':
           FieldValue.serverTimestamp(),
     };
 
+    // ========================================================
+    // CREATED AT
+    // ========================================================
+
     if (!existing.exists) {
       data['createdAt'] =
           FieldValue.serverTimestamp();
     }
+
+    // ========================================================
+    // SAVE
+    // ========================================================
 
     await document.set(
       data,
@@ -142,7 +328,8 @@ class AchievementRepository {
   // DELETE
   // ============================================================
 
-  Future<void> deleteAchievementData() async {
+  Future<void>
+      deleteAchievementData() async {
     final uid = currentUserId;
 
     if (uid == null) {

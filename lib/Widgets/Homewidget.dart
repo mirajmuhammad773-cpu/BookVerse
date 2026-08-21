@@ -1,11 +1,12 @@
 // lib/Widgets/HomeHeader.dart
 // ignore_for_file: unnecessary_non_null_assertion, unnecessary_null_comparison
 
-import 'package:bookverse/Views/FantansyBookscreen.dart';
-import 'package:bookverse/Views/HistoryBooks.dart';
-import 'package:bookverse/Views/RomanceBook.dart';
-import 'package:bookverse/Views/Scifibook.dart';
-import 'package:bookverse/Views/selfhelpbook.dart';
+import 'package:BookVerse/Views/FantansyBookscreen.dart';
+import 'package:BookVerse/Views/HistoryBooks.dart';
+import 'package:BookVerse/Views/NotificationScreen.dart';
+import 'package:BookVerse/Views/RomanceBook.dart';
+import 'package:BookVerse/Views/Scifibook.dart';
+import 'package:BookVerse/Views/selfhelpbook.dart';
 import 'package:flutter/material.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -44,7 +45,9 @@ class HomeHeader extends StatelessWidget {
           ),
         ),
         GestureDetector(
-          onTap: onBellTap,
+          onTap: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context)=>const NotificationsScreen()));
+          },
           child: Container(
             width: 40,
             height: 40,

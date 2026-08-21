@@ -3,10 +3,10 @@
 
 import 'dart:async';
 
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/ViewModels/Book-view-model.dart';
-import 'package:bookverse/Views/BookDetails.dart';
-import 'package:bookverse/Widgets/Homewidget.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/ViewModels/Book-view-model.dart';
+import 'package:BookVerse/Views/BookDetails.dart';
+import 'package:BookVerse/Widgets/Homewidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

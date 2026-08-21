@@ -1,5 +1,5 @@
 
-import 'package:bookverse/Models/BookModel.dart';
+import 'package:BookVerse/Models/BookModel.dart';
 import 'package:flutter/material.dart';
 
 class BookCardWidget extends StatelessWidget {

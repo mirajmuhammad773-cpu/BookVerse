@@ -1,8 +1,8 @@
 // lib/Screens/DownloadedBooksScreen.dart
 
-import 'package:bookverse/Models/BookDownloadModel.dart';
-import 'package:bookverse/ViewModels/BookDownloadProvider.dart';
-import 'package:bookverse/Widgets/DownloadBookwidget.dart';
+import 'package:BookVerse/Models/BookDownloadModel.dart';
+import 'package:BookVerse/ViewModels/BookDownloadProvider.dart';
+import 'package:BookVerse/Widgets/DownloadBookwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

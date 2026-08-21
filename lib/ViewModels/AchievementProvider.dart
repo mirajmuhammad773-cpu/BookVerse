@@ -1,6 +1,6 @@
-import 'package:bookverse/Models/AchievementModel.dart';
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/Repository/AchievementRepository.dart';
+import 'package:BookVerse/Models/AchievementModel.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/Repository/AchievementRepository.dart';
 import 'package:flutter/material.dart';
 
 class AchievementProvider extends ChangeNotifier {
@@ -23,11 +23,15 @@ class AchievementProvider extends ChangeNotifier {
   // COMPLETED BOOKS
   // ============================================================
 
-  final Set<int> _completedBookIds =
-      <int>{};
+  // Book IDs are used only to prevent the SAME book
+  // from being counted again.
+  final Set<int> _completedBookIds = <int>{};
 
-  final List<String> _completedBookTitles =
-      <String>[];
+  // Titles are used for displaying completed books.
+  final List<String> _completedBookTitles = <String>[];
+
+  // Lifetime completed books count.
+  int _completedBooks = 0;
 
   // ============================================================
   // POINTS
@@ -58,27 +62,20 @@ class AchievementProvider extends ChangeNotifier {
   // GETTERS
   // ============================================================
 
-  int get completedBooks =>
-      _completedBookIds.length;
+  int get completedBooks => _completedBooks;
 
   int get points => _points;
 
   int get totalStars => _points;
 
   Set<int> get completedBookIds =>
-      Set.unmodifiable(
-        _completedBookIds,
-      );
+      Set.unmodifiable(_completedBookIds);
 
   List<String> get completedBookTitles =>
-      List.unmodifiable(
-        _completedBookTitles,
-      );
+      List.unmodifiable(_completedBookTitles);
 
   Set<String> get rewardedAchievementIds =>
-      Set.unmodifiable(
-        _rewardedAchievementIds,
-      );
+      Set.unmodifiable(_rewardedAchievementIds);
 
   // ============================================================
   // LOAD ACHIEVEMENTS
@@ -92,40 +89,37 @@ class AchievementProvider extends ChangeNotifier {
     }
 
     _isLoading = true;
-
     _errorMessage = null;
 
     notifyListeners();
 
     try {
       final data =
-          await _repository
-              .loadAchievementData();
+          await _repository.loadAchievementData();
 
       // ========================================================
       // USER NAME
       // ========================================================
 
-      if (name != null &&
-          name.trim().isNotEmpty) {
+      if (name != null && name.trim().isNotEmpty) {
         _userName = name.trim();
       } else if (data != null) {
         _userName =
-            data['userName']
-                    ?.toString() ??
-                '';
+            data['userName']?.toString() ?? '';
       }
 
       // ========================================================
-      // RESET LOCAL DATA
+      // IMPORTANT
+      //
+      // Clear old in-memory data before loading Firebase.
+      // Firebase data is the source of truth.
       // ========================================================
 
       _completedBookIds.clear();
-
       _completedBookTitles.clear();
-
       _rewardedAchievementIds.clear();
 
+      _completedBooks = 0;
       _points = 0;
 
       // ========================================================
@@ -134,23 +128,19 @@ class AchievementProvider extends ChangeNotifier {
 
       if (data == null) {
         _isInitialized = true;
-
         _errorMessage = null;
-
         return;
       }
 
       // ========================================================
-      // COMPLETED BOOK IDS
+      // LOAD COMPLETED BOOK IDS
       // ========================================================
 
-      final ids =
-          data['completedBookIds'];
+      final ids = data['completedBookIds'];
 
       if (ids is List) {
         for (final value in ids) {
-          final id =
-              int.tryParse(
+          final id = int.tryParse(
             value.toString(),
           );
 
@@ -161,7 +151,7 @@ class AchievementProvider extends ChangeNotifier {
       }
 
       // ========================================================
-      // COMPLETED BOOK TITLES
+      // LOAD COMPLETED BOOK TITLES
       // ========================================================
 
       final titles =
@@ -175,74 +165,93 @@ class AchievementProvider extends ChangeNotifier {
           if (title.isNotEmpty &&
               !_completedBookTitles
                   .contains(title)) {
-            _completedBookTitles
-                .add(title);
+            _completedBookTitles.add(title);
           }
         }
       }
 
       // ========================================================
-      // POINTS
+      // LOAD LIFETIME COMPLETED BOOK COUNT
+      //
+      // IMPORTANT:
+      // Never reduce the saved lifetime count.
       // ========================================================
 
-      final savedPoints =
-          data['points'];
+      final savedCompletedBooks =
+          data['completedBooks'];
 
-      if (savedPoints is num) {
-        _points =
-            savedPoints.toInt();
+      int firebaseCompletedBooks = 0;
+
+      if (savedCompletedBooks is num) {
+        firebaseCompletedBooks =
+            savedCompletedBooks.toInt();
       } else {
-        _points =
+        firebaseCompletedBooks =
             int.tryParse(
-                  savedPoints
+                  savedCompletedBooks
                           ?.toString() ??
                       '0',
                 ) ??
                 0;
       }
 
+      // Use the largest valid value.
+      _completedBooks = [
+        firebaseCompletedBooks,
+        _completedBookIds.length,
+        _completedBookTitles.length,
+      ].reduce(
+        (a, b) => a > b ? a : b,
+      );
+
       // ========================================================
-      // REWARDED ACHIEVEMENTS
+      // LOAD POINTS
+      // ========================================================
+
+      final savedPoints = data['points'];
+
+      if (savedPoints is num) {
+        _points = savedPoints.toInt();
+      } else {
+        _points = int.tryParse(
+              savedPoints?.toString() ?? '0',
+            ) ??
+            0;
+      }
+
+      // ========================================================
+      // LOAD REWARDED ACHIEVEMENTS
       // ========================================================
 
       final rewarded =
-          data[
-              'rewardedAchievementIds'];
+          data['rewardedAchievementIds'];
 
       if (rewarded is List) {
-        for (final value
-            in rewarded) {
+        for (final value in rewarded) {
           final id =
               value.toString().trim();
 
           if (id.isNotEmpty) {
-            _rewardedAchievementIds
-                .add(id);
+            _rewardedAchievementIds.add(id);
           }
         }
       }
 
       // ========================================================
-      // CHECK REWARDS
+      // CHECK EXISTING REWARDS
       // ========================================================
 
-      final bool rewardsChanged =
+      final rewardsChanged =
           _checkAndGiveAchievementRewards();
 
       if (rewardsChanged) {
         await _saveToFirebase();
       }
 
-      // ========================================================
-      // INITIALIZED
-      // ========================================================
-
       _isInitialized = true;
-
       _errorMessage = null;
     } catch (e) {
-      _errorMessage =
-          e.toString();
+      _errorMessage = e.toString();
 
       _isInitialized = true;
 
@@ -261,20 +270,21 @@ class AchievementProvider extends ChangeNotifier {
   // ============================================================
 
   Future<void> _saveToFirebase() async {
-    await _repository
-        .saveAchievementData(
+    await _repository.saveAchievementData(
       userName: _userName,
-      completedBooks:
-          _completedBookIds.length,
-      points: _points,
+
+      completedBooks: _completedBooks,
+
       completedBookIds:
-          Set<int>.from(
-        _completedBookIds,
-      ),
+          Set<int>.from(_completedBookIds),
+
       completedBookTitles:
           List<String>.from(
         _completedBookTitles,
       ),
+
+      points: _points,
+
       rewardedAchievementIds:
           Set<String>.from(
         _rewardedAchievementIds,
@@ -284,12 +294,9 @@ class AchievementProvider extends ChangeNotifier {
 
   // ============================================================
   // ACHIEVEMENTS
-  //
-  // Default achievements for existing reward logic.
   // ============================================================
 
-  List<AchievementModel>
-      get achievements {
+  List<AchievementModel> get achievements {
     return getAchievementsWithStreak(0);
   }
 
@@ -301,8 +308,7 @@ class AchievementProvider extends ChangeNotifier {
       getAchievementsWithStreak(
     int currentStreak,
   ) {
-    final bookCount =
-        _completedBookIds.length;
+    final bookCount = _completedBooks;
 
     final safeStreak =
         currentStreak < 0
@@ -310,13 +316,15 @@ class AchievementProvider extends ChangeNotifier {
             : currentStreak;
 
     return [
+      // ========================================================
+      // FIRST BOOK
+      // ========================================================
+
       AchievementModel(
         id: 'first_chapter',
         title: 'First Chapter',
-        description:
-            'Read your first book',
-        icon:
-            Icons.menu_book_rounded,
+        description: 'Read your first book',
+        icon: Icons.menu_book_rounded,
         iconBackgroundColor:
             const Color(0xFFEDE4FF),
         iconColor:
@@ -328,11 +336,14 @@ class AchievementProvider extends ChangeNotifier {
         category: 'Reading',
       ),
 
+      // ========================================================
+      // 3 BOOKS
+      // ========================================================
+
       AchievementModel(
         id: 'book_explorer',
         title: 'Book Explorer',
-        description:
-            'Read 3 books',
+        description: 'Read 3 books',
         icon:
             Icons.auto_stories_rounded,
         iconBackgroundColor:
@@ -369,7 +380,7 @@ class AchievementProvider extends ChangeNotifier {
       ),
 
       // ========================================================
-      // 15 DAY READING
+      // 15 DAY STREAK
       // ========================================================
 
       AchievementModel(
@@ -390,11 +401,14 @@ class AchievementProvider extends ChangeNotifier {
         category: 'Streaks',
       ),
 
+      // ========================================================
+      // 10 BOOKS
+      // ========================================================
+
       AchievementModel(
         id: 'avid_reader',
         title: 'Avid Reader',
-        description:
-            'Read 10 books',
+        description: 'Read 10 books',
         icon:
             Icons.emoji_events_rounded,
         iconBackgroundColor:
@@ -408,11 +422,14 @@ class AchievementProvider extends ChangeNotifier {
         category: 'Reading',
       ),
 
+      // ========================================================
+      // 25 BOOKS
+      // ========================================================
+
       AchievementModel(
         id: 'book_master',
         title: 'Book Master',
-        description:
-            'Read 25 books',
+        description: 'Read 25 books',
         icon:
             Icons.workspace_premium_rounded,
         iconBackgroundColor:
@@ -426,11 +443,14 @@ class AchievementProvider extends ChangeNotifier {
         category: 'Collection',
       ),
 
+      // ========================================================
+      // 50 BOOKS
+      // ========================================================
+
       AchievementModel(
         id: 'book_collector',
         title: 'Book Collector',
-        description:
-            'Read 50 books',
+        description: 'Read 50 books',
         icon:
             Icons.collections_bookmark_rounded,
         iconBackgroundColor:
@@ -474,14 +494,36 @@ class AchievementProvider extends ChangeNotifier {
     final bookTitle =
         book.title.trim();
 
+    if (bookTitle.isEmpty) {
+      debugPrint(
+        'Achievement: Book title is empty.',
+      );
+
+      return false;
+    }
+
     // ========================================================
-    // DUPLICATE CHECK
+    // IMPORTANT DUPLICATE CHECK
+    //
+    // Same book should never be counted twice.
+    //
+    // We check BOTH ID and title.
+    // This protects us even if the API/model gives
+    // an unexpected duplicate ID.
     // ========================================================
 
-    if (_completedBookIds
-        .contains(bookId)) {
+    final alreadyCompletedById =
+        _completedBookIds.contains(bookId);
+
+    final alreadyCompletedByTitle =
+        _completedBookTitles.contains(
+      bookTitle,
+    );
+
+    if (alreadyCompletedById ||
+        alreadyCompletedByTitle) {
       debugPrint(
-        'Achievement: Book already completed',
+        'Achievement: "$bookTitle" already completed.',
       );
 
       return true;
@@ -501,6 +543,9 @@ class AchievementProvider extends ChangeNotifier {
       _completedBookTitles,
     );
 
+    final oldCompletedBooks =
+        _completedBooks;
+
     final oldPoints = _points;
 
     final oldRewards =
@@ -510,35 +555,42 @@ class AchievementProvider extends ChangeNotifier {
 
     try {
       // ======================================================
-      // ADD BOOK
+      // ADD NEW BOOK
       // ======================================================
 
-      _completedBookIds.add(
-        bookId,
-      );
+      _completedBookIds.add(bookId);
 
-      // ======================================================
-      // ADD TITLE
-      // ======================================================
-
-      if (bookTitle.isNotEmpty &&
-          !_completedBookTitles
-              .contains(bookTitle)) {
+      if (!_completedBookTitles
+          .contains(bookTitle)) {
         _completedBookTitles.add(
           bookTitle,
         );
       }
 
       // ======================================================
-      // CALCULATE REWARDS
+      // INCREASE LIFETIME COUNT
+      //
+      // THIS MUST HAPPEN ONLY FOR A NEW BOOK.
       // ======================================================
 
-      final bool rewardsAdded =
+      _completedBooks =
+          _completedBooks + 1;
+
+      // ======================================================
+      // RECHECK ACHIEVEMENTS
+      // ======================================================
+
+      final rewardsAdded =
           _checkAndGiveAchievementRewards();
 
       _errorMessage = null;
 
+      // Update UI immediately.
       notifyListeners();
+
+      // ======================================================
+      // SAVE ALL BOOKS
+      // ======================================================
 
       await _saveToFirebase();
 
@@ -551,16 +603,27 @@ class AchievementProvider extends ChangeNotifier {
       );
 
       debugPrint(
+        'Book: $bookTitle',
+      );
+
+      debugPrint(
         'Book ID: $bookId',
       );
 
       debugPrint(
-        'Book Title: $bookTitle',
+        'Completed Books: $_completedBooks',
       );
 
       debugPrint(
-        'Total Books: '
-        '${_completedBookIds.length}',
+        'Completed IDs: $_completedBookIds',
+      );
+
+      debugPrint(
+        'Completed Titles: $_completedBookTitles',
+      );
+
+      debugPrint(
+        'Points: $_points',
       );
 
       if (rewardsAdded) {
@@ -568,15 +631,6 @@ class AchievementProvider extends ChangeNotifier {
           'New achievement reward added.',
         );
       }
-
-      debugPrint(
-        'Points: $_points',
-      );
-
-      debugPrint(
-        'Rewarded IDs: '
-        '$_rewardedAchievementIds',
-      );
 
       debugPrint(
         '================================',
@@ -596,14 +650,16 @@ class AchievementProvider extends ChangeNotifier {
         ..clear()
         ..addAll(oldTitles);
 
+      _completedBooks =
+          oldCompletedBooks;
+
       _points = oldPoints;
 
       _rewardedAchievementIds
         ..clear()
         ..addAll(oldRewards);
 
-      _errorMessage =
-          e.toString();
+      _errorMessage = e.toString();
 
       notifyListeners();
 
@@ -629,9 +685,7 @@ class AchievementProvider extends ChangeNotifier {
       }
 
       if (_rewardedAchievementIds
-          .contains(
-        achievement.id,
-      )) {
+          .contains(achievement.id)) {
         continue;
       }
 
@@ -645,30 +699,8 @@ class AchievementProvider extends ChangeNotifier {
       rewardAdded = true;
 
       debugPrint(
-        '================================',
-      );
-
-      debugPrint(
-        'ACHIEVEMENT REWARD ADDED',
-      );
-
-      debugPrint(
-        'Achievement: '
+        'Achievement unlocked: '
         '${achievement.title}',
-      );
-
-      debugPrint(
-        'Reward: '
-        '+${achievement.reward}',
-      );
-
-      debugPrint(
-        'Total Points: '
-        '$_points',
-      );
-
-      debugPrint(
-        '================================',
       );
     }
 
@@ -683,7 +715,9 @@ class AchievementProvider extends ChangeNotifier {
     BookModel book,
   ) {
     return _completedBookIds
-        .contains(book.id);
+            .contains(book.id) ||
+        _completedBookTitles
+            .contains(book.title.trim());
   }
 
   // ============================================================
@@ -708,10 +742,9 @@ class AchievementProvider extends ChangeNotifier {
     _isInitialized = false;
 
     await loadAchievements(
-      name:
-          _userName.isEmpty
-              ? null
-              : _userName,
+      name: _userName.isEmpty
+          ? null
+          : _userName,
     );
   }
 
@@ -728,13 +761,16 @@ class AchievementProvider extends ChangeNotifier {
 
       _rewardedAchievementIds.clear();
 
+      _completedBooks = 0;
+
       _points = 0;
 
       _errorMessage = null;
 
       notifyListeners();
 
-      await _saveToFirebase();
+      await _repository
+          .deleteAchievementData();
     } catch (e) {
       _errorMessage =
           e.toString();

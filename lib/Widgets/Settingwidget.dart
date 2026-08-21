@@ -144,10 +144,10 @@ class SettingsArrowTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          const Icon(
-            Icons.chevron_right_rounded,
-            size: 22,
-          ),
+          // const Icon(
+          //   Icons.chevron_right_rounded,
+          //   size: 22,
+          // ),
         ],
       ),
     );

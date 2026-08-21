@@ -1,6 +1,6 @@
 // lib/Repository/ReadingGoalRepository.dart
 
-import 'package:bookverse/Models/ReadingGoalsModel.dart';
+import 'package:BookVerse/Models/ReadingGoalsModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

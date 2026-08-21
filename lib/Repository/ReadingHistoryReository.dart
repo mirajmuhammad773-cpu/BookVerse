@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:bookverse/Models/ReadingHistoryModel.dart';
+import 'package:BookVerse/Models/ReadingHistoryModel.dart';
 
 class ReadingHistoryRepository {
   // ============================================================

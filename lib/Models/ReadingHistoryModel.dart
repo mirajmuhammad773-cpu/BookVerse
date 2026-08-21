@@ -1,6 +1,6 @@
 // ignore_for_file: file_names
 
-import 'package:bookverse/Models/BookModel.dart';
+import 'package:BookVerse/Models/BookModel.dart';
 
 class ReadingHistoryModel {
   final String bookId;

@@ -1,7 +1,7 @@
 // lib/Widgets/ReadingGoalsWidgets.dart
 // ignore_for_file: deprecated_member_use, prefer_const_constructors
 
-import 'package:bookverse/Models/ReadingGoalsModel.dart';
+import 'package:BookVerse/Models/ReadingGoalsModel.dart';
 import 'package:flutter/material.dart';
 
 const goalsPurple = Color(0xFF6C4CE0);

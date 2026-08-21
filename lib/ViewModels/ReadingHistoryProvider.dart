@@ -1,6 +1,6 @@
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/Models/ReadingHistoryModel.dart';
-import 'package:bookverse/Repository/ReadingHistoryReository.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/Models/ReadingHistoryModel.dart';
+import 'package:BookVerse/Repository/ReadingHistoryReository.dart';
 import 'package:flutter/material.dart';
 
 class ReadingHistoryProvider extends ChangeNotifier {

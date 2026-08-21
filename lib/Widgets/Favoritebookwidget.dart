@@ -1,7 +1,7 @@
 // ignore_for_file: deprecated_member_use, unused_import
 
-import 'package:bookverse/Views/ReaderScreen.dart';
-import 'package:bookverse/Widgets/Readerpagewidget.dart' hide BookPageData;
+import 'package:BookVerse/Views/ReaderScreen.dart';
+import 'package:BookVerse/Widgets/Readerpagewidget.dart' hide BookPageData;
 import 'package:flutter/material.dart';
 
 

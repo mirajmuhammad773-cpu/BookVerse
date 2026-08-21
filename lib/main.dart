@@ -1,31 +1,33 @@
-import 'package:bookverse/Repository/Book-Repository.dart';
+import 'package:BookVerse/Repository/Book-Repository.dart';
 
 // ============================================================
 // VIEW MODELS
 // ============================================================
 
-import 'package:bookverse/ViewModels/AchievementProvider.dart';
-import 'package:bookverse/ViewModels/Book-view-model.dart';
-import 'package:bookverse/ViewModels/BookDownloadProvider.dart';
-import 'package:bookverse/ViewModels/FavoriteBookProvider.dart';
-import 'package:bookverse/ViewModels/FontProvider.dart';
-import 'package:bookverse/ViewModels/BrightnessProvider.dart';
-import 'package:bookverse/ViewModels/PlansProvider.dart';
-import 'package:bookverse/ViewModels/ReadingGoalProvider.dart';
-import 'package:bookverse/ViewModels/ReadingHistoryProvider.dart';
-import 'package:bookverse/ViewModels/UserProvider.dart';
+import 'package:BookVerse/ViewModels/AchievementProvider.dart';
+import 'package:BookVerse/ViewModels/Book-view-model.dart';
+import 'package:BookVerse/ViewModels/BookDownloadProvider.dart';
+import 'package:BookVerse/ViewModels/FavoriteBookProvider.dart';
+import 'package:BookVerse/ViewModels/FontProvider.dart';
+import 'package:BookVerse/ViewModels/BrightnessProvider.dart';
+import 'package:BookVerse/ViewModels/NotificationProvider.dart';
+import 'package:BookVerse/ViewModels/PlansProvider.dart';
+import 'package:BookVerse/ViewModels/ReadingGoalProvider.dart';
+import 'package:BookVerse/ViewModels/ReadingHistoryProvider.dart';
+import 'package:BookVerse/ViewModels/TaotoTurnpageProvider.dart';
+import 'package:BookVerse/ViewModels/UserProvider.dart';
 
 // ============================================================
 // PAYMENT PROVIDER
 // ============================================================
 
-import 'package:bookverse/ViewModels/PaymentProvider.dart';
+import 'package:BookVerse/ViewModels/PaymentProvider.dart';
 
 // ============================================================
 // SCREENS
 // ============================================================
 
-import 'package:bookverse/Views/SplashScreen.dart';
+import 'package:BookVerse/Views/SplashScreen.dart';
 
 // ============================================================
 // FLUTTER / FIREBASE / STRIPE
@@ -65,7 +67,17 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        // TaptoTurnPageProvider 
 
+        ChangeNotifierProvider(
+          create: (_) => TapToTurnPageProvider(),
+        ),
+
+        // NotificationProvider
+        ChangeNotifierProvider(
+          create: (_) => NotificationProvider(),
+        ),
+        
         // ======================================================
         // FONT PROVIDER
         // ======================================================

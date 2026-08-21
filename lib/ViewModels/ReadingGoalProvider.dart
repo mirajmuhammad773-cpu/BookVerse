@@ -1,6 +1,6 @@
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/Models/ReadingGoalsModel.dart';
-import 'package:bookverse/Repository/ReadingGoalRepository.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/Models/ReadingGoalsModel.dart';
+import 'package:BookVerse/Repository/ReadingGoalRepository.dart';
 import 'package:flutter/material.dart';
 
 class ReadingGoalProvider extends ChangeNotifier {

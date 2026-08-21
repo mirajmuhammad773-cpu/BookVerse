@@ -2,8 +2,8 @@
 
 import 'dart:math';
 
-import 'package:bookverse/Auths/SigninScreen.dart';
-import 'package:bookverse/Views/BooknaScreen.dart';
+import 'package:BookVerse/Auths/SigninScreen.dart';
+import 'package:BookVerse/Views/BooknaScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 

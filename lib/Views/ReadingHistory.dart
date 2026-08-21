@@ -1,8 +1,8 @@
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/Models/ReadingHistoryModel.dart';
-import 'package:bookverse/ViewModels/ReadingHistoryProvider.dart';
-import 'package:bookverse/Views/BookDetails.dart';
-import 'package:bookverse/Widgets/ReadingHistoryWidget.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/Models/ReadingHistoryModel.dart';
+import 'package:BookVerse/ViewModels/ReadingHistoryProvider.dart';
+import 'package:BookVerse/Views/BookDetails.dart';
+import 'package:BookVerse/Widgets/ReadingHistoryWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

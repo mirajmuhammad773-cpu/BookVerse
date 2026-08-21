@@ -1,9 +1,9 @@
 // lib/Screens/FavouriteBooksScreen.dart
 
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/ViewModels/FavoriteBookProvider.dart';
-import 'package:bookverse/Views/BookDetails.dart';
-import 'package:bookverse/Widgets/Booklistwidget.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/ViewModels/FavoriteBookProvider.dart';
+import 'package:BookVerse/Views/BookDetails.dart';
+import 'package:BookVerse/Widgets/Booklistwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

@@ -1,4 +1,4 @@
-import 'package:bookverse/Models/PlansModel.dart';
+import 'package:BookVerse/Models/PlansModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 

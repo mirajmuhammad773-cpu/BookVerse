@@ -1,8 +1,8 @@
-import 'package:bookverse/Repository/FavoritebookRepository.dart';
+import 'package:BookVerse/Repository/FavoritebookRepository.dart';
 import 'package:flutter/material.dart';
 
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/Models/FavoriteBookModel.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/Models/FavoriteBookModel.dart';
 
 class FavouriteBooksProvider extends ChangeNotifier {
   // ============================================================

@@ -1,6 +1,6 @@
 
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/Repository/Book-Repository.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/Repository/Book-Repository.dart';
 import 'package:flutter/foundation.dart';
 
 class BookViewModel extends ChangeNotifier {

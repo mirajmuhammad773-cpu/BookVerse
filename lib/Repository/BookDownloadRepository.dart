@@ -4,8 +4,8 @@
 
 import 'dart:io';
 
-import 'package:bookverse/Models/BookDownloadModel.dart';
-import 'package:bookverse/Models/BookModel.dart';
+import 'package:BookVerse/Models/BookDownloadModel.dart';
+import 'package:BookVerse/Models/BookModel.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;

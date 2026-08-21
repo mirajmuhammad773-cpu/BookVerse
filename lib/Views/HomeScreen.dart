@@ -1,13 +1,13 @@
 // lib/Screens/BookHomeScreen.dart
 
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/ViewModels/Book-view-model.dart';
-import 'package:bookverse/ViewModels/ReadingHistoryProvider.dart';
-import 'package:bookverse/Views/BookDetails.dart';
-import 'package:bookverse/Views/ReadingHistory.dart';
-import 'package:bookverse/Widgets/Carouselwidget.dart';
-import 'package:bookverse/Widgets/Homewidget.dart';
-import 'package:bookverse/Widgets/ReadingHistoryWidget.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/ViewModels/Book-view-model.dart';
+import 'package:BookVerse/ViewModels/ReadingHistoryProvider.dart';
+import 'package:BookVerse/Views/BookDetails.dart';
+import 'package:BookVerse/Views/ReadingHistory.dart';
+import 'package:BookVerse/Widgets/Carouselwidget.dart';
+import 'package:BookVerse/Widgets/Homewidget.dart';
+import 'package:BookVerse/Widgets/ReadingHistoryWidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

@@ -1,6 +1,6 @@
-import 'package:bookverse/ViewModels/AchievementProvider.dart';
-import 'package:bookverse/ViewModels/ReadingGoalProvider.dart';
-import 'package:bookverse/Widgets/Achievementwidget.dart';
+import 'package:BookVerse/ViewModels/AchievementProvider.dart';
+import 'package:BookVerse/ViewModels/ReadingGoalProvider.dart';
+import 'package:BookVerse/Widgets/Achievementwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

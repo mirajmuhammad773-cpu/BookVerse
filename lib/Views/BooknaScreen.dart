@@ -1,9 +1,9 @@
 // lib/Screens/BookNavScreen.dart
-import 'package:bookverse/Views/FavoritesScreen.dart';
-import 'package:bookverse/Views/HomeScreen.dart';
-import 'package:bookverse/Views/LibraryScreen.dart';
-import 'package:bookverse/Views/PlansScreen.dart';
-import 'package:bookverse/Views/ProfileScreen.dart';
+import 'package:BookVerse/Views/FavoritesScreen.dart';
+import 'package:BookVerse/Views/HomeScreen.dart';
+import 'package:BookVerse/Views/LibraryScreen.dart';
+import 'package:BookVerse/Views/PlansScreen.dart';
+import 'package:BookVerse/Views/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 
 class BookNavScreen extends StatefulWidget {

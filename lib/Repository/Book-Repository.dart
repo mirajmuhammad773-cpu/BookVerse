@@ -2,7 +2,7 @@
 
 import 'dart:convert';
 
-import 'package:bookverse/Models/BookModel.dart';
+import 'package:BookVerse/Models/BookModel.dart';
 import 'package:http/http.dart' as http;
 
 class BookRepository {

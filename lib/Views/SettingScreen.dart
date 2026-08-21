@@ -1,8 +1,9 @@
-import 'package:bookverse/Auths/SigninScreen.dart';
-import 'package:bookverse/ViewModels/BrightnessProvider.dart';
-import 'package:bookverse/ViewModels/FontProvider.dart';
-import 'package:bookverse/ViewModels/UserProvider.dart';
-import 'package:bookverse/Widgets/Settingwidget.dart';
+import 'package:BookVerse/Auths/SigninScreen.dart';
+import 'package:BookVerse/ViewModels/BrightnessProvider.dart';
+import 'package:BookVerse/ViewModels/FontProvider.dart';
+import 'package:BookVerse/ViewModels/TaotoTurnpageProvider.dart';
+import 'package:BookVerse/ViewModels/UserProvider.dart';
+import 'package:BookVerse/Widgets/Settingwidget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -22,7 +23,6 @@ class _SettingsScreenState
 
   bool readingReminder = true;
   bool autoBrightness = true;
-  bool tapToTurnPage = false;
   bool showClock = true;
 
   // ============================================================
@@ -211,35 +211,11 @@ class _SettingsScreenState
                 // READING REMINDER
                 // ==============================================
 
-                SettingsSwitchTile(
-                  icon: Icons
-                      .notifications_active_outlined,
-                  title: "Reading Reminder",
-                  value: readingReminder,
-                  onChanged: (value) {
-                    setState(() {
-                      readingReminder = value;
-                    });
-                  },
-                ),
-
-                const Divider(
-                  height: 1,
-                ),
-
-                // ==============================================
-                // AUTO BRIGHTNESS
-                // ==============================================
-
-                SettingsSwitchTile(
-                  icon: Icons.wb_sunny_outlined,
-                  title: "Auto Brightness",
-                  value: autoBrightness,
-                  onChanged: (value) {
-                    setState(() {
-                      autoBrightness = value;
-                    });
-                  },
+                                SettingsArrowTile(
+                  icon: Icons.notifications_active_outlined,
+                  title: "Reading Remainder",
+                  value: "Defualt",
+                  onTap: () {},
                 ),
 
                 const Divider(
@@ -250,35 +226,27 @@ class _SettingsScreenState
                 // TAP TO TURN PAGE
                 // ==============================================
 
-                SettingsSwitchTile(
+              Consumer<TapToTurnPageProvider>(
+                  builder: (
+                    context,
+                     tapProvider,
+                       child,
+                         ) {
+                return SettingsSwitchTile(
                   icon: Icons.touch_app_outlined,
                   title: "Tap to Turn Page",
-                  value: tapToTurnPage,
-                  onChanged: (value) {
-                    setState(() {
-                      tapToTurnPage = value;
-                    });
+                  value: tapProvider.isEnabled,
+                 onChanged: (value) async {
+                    await tapProvider.setEnabled(value);
                   },
-                ),
+                );
+                },
+              ),
 
                 const Divider(
                   height: 1,
                 ),
-
-                // ==============================================
-                // SHOW CLOCK
-                // ==============================================
-
-                SettingsSwitchTile(
-                  icon: Icons.access_time_outlined,
-                  title: "Show Clock",
-                  value: showClock,
-                  onChanged: (value) {
-                    setState(() {
-                      showClock = value;
-                    });
-                  },
-                ),
+                
               ],
             ),
 
@@ -552,10 +520,10 @@ class _SettingsScreenState
                       provider:
                           brightnessProvider,
                       mode:
-                          BrightnessProvider.normal,
+                          BrightnessProvider.high,
                       icon: Icons
-                          .brightness_auto_outlined,
-                      title: "Normal",
+                          .brightness_7_outlined,
+                      title: "High",
                     ),
 
                     // ========================================
@@ -567,10 +535,10 @@ class _SettingsScreenState
                       provider:
                           brightnessProvider,
                       mode:
-                          BrightnessProvider.low,
+                          BrightnessProvider.normal,
                       icon: Icons
-                          .brightness_4_outlined,
-                      title: "Low",
+                          .brightness_auto_outlined,
+                      title: "Normal",
                     ),
 
                     // ========================================
@@ -597,10 +565,10 @@ class _SettingsScreenState
                       provider:
                           brightnessProvider,
                       mode:
-                          BrightnessProvider.high,
+                          BrightnessProvider.low,
                       icon: Icons
-                          .brightness_7_outlined,
-                      title: "High",
+                          .brightness_4_outlined,
+                      title: "Low",
                     ),
                   ],
                 ),

@@ -1,8 +1,8 @@
 
 // ignore_for_file: deprecated_member_use, unused_field
 
-import 'package:bookverse/Models/BookModel.dart';
-import 'package:bookverse/Views/ReaderScreen.dart';
+import 'package:BookVerse/Models/BookModel.dart';
+import 'package:BookVerse/Views/ReaderScreen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:palette_generator/palette_generator.dart';
